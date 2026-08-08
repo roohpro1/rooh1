@@ -1,0 +1,165 @@
+{
+  "geminiKeys": [
+    {
+      "lastChecked": "2026-08-04T22:50:44.535Z",
+      "status": "active",
+      "key": "AQ.Ab8RN6LHDaxyBC6_kfxORDcJ2tD2xhLY0IEPCRcS5VrAjjJEqQ",
+      "id": "key_env_gemini_1"
+    }
+  ],
+  "groqKeys": [
+    {
+      "key": "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",
+      "status": "active",
+      "label": "مفتاح Proq/Groq #1",
+      "id": "key_groq_1"
+    },
+    {
+      "label": "مفتاح Proq/Groq #2",
+      "status": "active",
+      "key": "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",
+      "id": "key_groq_2"
+    },
+    {
+      "id": "key_groq_3",
+      "key": "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",
+      "label": "مفتاح Proq/Groq #3",
+      "status": "active"
+    },
+    {
+      "label": "مفتاح Proq/Groq #4",
+      "key": "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",
+      "status": "active",
+      "id": "key_groq_4"
+    },
+    {
+      "status": "active",
+      "key": "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",
+      "label": "مفتاح Proq/Groq #5",
+      "id": "key_groq_5"
+    },
+    {
+      "key": "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",
+      "status": "active",
+      "label": "مفتاح Proq/Groq #6",
+      "id": "key_groq_6"
+    },
+    {
+      "key": "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",
+      "status": "active",
+      "id": "key_groq_7",
+      "label": "مفتاح Proq/Groq #7"
+    },
+    {
+      "label": "مفتاح Proq/Groq #8",
+      "key": "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",
+      "id": "key_groq_8",
+      "status": "active"
+    },
+    {
+      "status": "active",
+      "id": "key_groq_9",
+      "key": "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",
+      "label": "مفتاح Proq/Groq #9"
+    },
+    {
+      "status": "active",
+      "label": "مفتاح Proq/Groq #10",
+      "id": "key_groq_10",
+      "key": "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"
+    },
+    {
+      "key": "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",
+      "id": "key_groq_11",
+      "status": "active",
+      "label": "مفتاح Proq/Groq #11"
+    },
+    {
+      "id": "key_groq_12",
+      "key": "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",
+      "status": "active",
+      "label": "مفتاح Proq/Groq #12"
+    }
+  ],
+  "elevenlabsKeys": [
+    {
+      "key": "",
+      "status": "unknown",
+      "id": "key_elevenlabs_1",
+      "label": "مفتاح ElevenLabs #1"
+    },
+    {
+      "label": "مفتاح ElevenLabs #2",
+      "id": "key_elevenlabs_2",
+      "status": "unknown",
+      "key": ""
+    },
+    {
+      "id": "key_elevenlabs_3",
+      "status": "unknown",
+      "label": "مفتاح ElevenLabs #3",
+      "key": ""
+    },
+    {
+      "status": "unknown",
+      "id": "key_elevenlabs_4",
+      "key": "",
+      "label": "مفتاح ElevenLabs #4"
+    },
+    {
+      "label": "مفتاح ElevenLabs #5",
+      "status": "unknown",
+      "id": "key_elevenlabs_5",
+      "key": ""
+    },
+    {
+      "label": "مفتاح ElevenLabs #6",
+      "id": "key_elevenlabs_6",
+      "key": "",
+      "status": "unknown"
+    },
+    {
+      "label": "مفتاح ElevenLabs #7",
+      "id": "key_elevenlabs_7",
+      "status": "unknown",
+      "key": ""
+    },
+    {
+      "key": "",
+      "label": "مفتاح ElevenLabs #8",
+      "id": "key_elevenlabs_8",
+      "status": "unknown"
+    },
+    {
+      "label": "مفتاح ElevenLabs #9",
+      "key": "",
+      "status": "unknown",
+      "id": "key_elevenlabs_9"
+    },
+    {
+      "status": "unknown",
+      "key": "",
+      "label": "مفتاح ElevenLabs #10",
+      "id": "key_elevenlabs_10"
+    },
+    {
+      "key": "",
+      "label": "مفتاح ElevenLabs #11",
+      "status": "unknown",
+      "id": "key_elevenlabs_11"
+    }
+  ],
+  "openaiKeys": [
+    {
+      "status": "active",
+      "key": "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",
+      "id": "key_env_openai_default"
+    }
+  ],
+  "onesignalAppIds": [],
+  "onesignalRestKeys": [],
+  "googleRefreshTokens": [],
+  "githubTokens": [],
+  "githubRepo": "dodorooh/rooh",
+  "activeRotationMessage": "تم تحديث المفاتيح وتفعيل التبديل التلقائي الاحترافي بنجاح."
+}

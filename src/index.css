@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Base resets to fit Arabic layout seamlessly */
+body {
+  font-family: var(--font-sans);
+  direction: rtl; /* RTL direction for Arabic */
+  text-align: right;
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 300ms;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ========================================================
+   GLOBAL CLICK RIPPLE / TAP ANIMATION & STYLES
+   ======================================================== */
+.click-ripple {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple-bloom 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  z-index: 99999;
+}
+
+@keyframes ripple-bloom {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.2);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+  }
+  100% {
+    width: 140px;
+    height: 140px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0);
+  }
+}
+
+/* ========================================================
+   THEME 1: WHITE MODE (الوضع الأبيض الافتراضي للموقع) - Default
+   ======================================================== */
+body, body.theme-white, html:not(.dark) body {
+  background-color: #f8fafc !important;
+  color: #000000 !important;
+}
+body.theme-white .bg-white, html:not(.dark) .bg-white {
+  background-color: #ffffff !important;
+}
+body.theme-white .bg-slate-50, html:not(.dark) .bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+body.theme-white .bg-slate-100, html:not(.dark) .bg-slate-100 {
+  background-color: #f1f5f9 !important;
+}
+body.theme-white .border-slate-100, body.theme-white .border-slate-200, body.theme-white .border-slate-300,
+html:not(.dark) .border-slate-100, html:not(.dark) .border-slate-200, html:not(.dark) .border-slate-300 {
+  border-color: #cbd5e1 !important;
+}
+body.theme-white .text-slate-950, body.theme-white .text-slate-900, body.theme-white .text-slate-800,
+html:not(.dark) .text-slate-950, html:not(.dark) .text-slate-900, html:not(.dark) .text-slate-800 {
+  color: #000000 !important;
+}
+body.theme-white .text-slate-700, html:not(.dark) .text-slate-700 {
+  color: #0f172a !important;
+}
+body.theme-white .text-slate-600, html:not(.dark) .text-slate-600 {
+  color: #1e293b !important;
+}
+body.theme-white .text-slate-500, html:not(.dark) .text-slate-500 {
+  color: #334155 !important;
+}
+body.theme-white input, body.theme-white textarea, body.theme-white select,
+html:not(.dark) input, html:not(.dark) textarea, html:not(.dark) select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #94a3b8 !important;
+}
+
+/* White Mode Typography & Editorial High-Contrast Overrides */
+html:not(.dark) article, body.theme-white article,
+html:not(.dark) .prose, body.theme-white .prose {
+  color: #000000 !important;
+}
+html:not(.dark) article p, body.theme-white article p,
+html:not(.dark) .prose p, body.theme-white .prose p {
+  color: #000000 !important;
+}
+html:not(.dark) article li, body.theme-white article li,
+html:not(.dark) .prose li, body.theme-white .prose li {
+  color: #000000 !important;
+}
+html:not(.dark) article strong, body.theme-white article strong,
+html:not(.dark) .prose strong, body.theme-white .prose strong {
+  color: #000000 !important;
+  font-weight: 900 !important;
+}
+html:not(.dark) strong.highlight-red {
+  color: #dc2626 !important; /* Red highlight for bold keywords in light mode */
+  font-weight: 900 !important;
+}
+html:not(.dark) .recharts-text, body.theme-white .recharts-text {
+  fill: #000000 !important;
+  color: #000000 !important;
+}
+/* Ensure headers and category labels in light mode are crisp black */
+html:not(.dark) h1, html:not(.dark) h2, html:not(.dark) h3, html:not(.dark) h4,
+body.theme-white h1, body.theme-white h2, body.theme-white h3, body.theme-white h4 {
+  color: inherit;
+}
+
+/* ========================================================
+   THEME 2: DARK MODE (الوضع الداكن / الأسود عند التبديل)
+   ======================================================== */
+body.theme-black, html.dark body {
+  background-color: #070b13 !important;
+  color: #f4f4f5 !important;
+}
+body.theme-black .bg-white, html.dark .bg-white {
+  background-color: #0b0f19 !important;
+}
+body.theme-black .bg-slate-50, body.theme-black .bg-slate-100,
+html.dark .bg-slate-50, html.dark .bg-slate-100 {
+  background-color: #111827 !important;
+}
+body.theme-black .border-slate-100, body.theme-black .border-slate-200, body.theme-black .border-slate-300,
+html.dark .border-slate-100, html.dark .border-slate-200, html.dark .border-slate-300 {
+  border-color: #1e293b !important;
+}
+body.theme-black .text-slate-900, body.theme-black .text-slate-800, body.theme-black .text-slate-700,
+html.dark .text-slate-900, html.dark .text-slate-800, html.dark .text-slate-700 {
+  color: #f8fafc !important;
+}
+body.theme-black .text-slate-600, html.dark .text-slate-600 {
+  color: #e2e8f0 !important;
+}
+body.theme-black .text-slate-500, html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+body.theme-black input, body.theme-black textarea, body.theme-black select,
+html.dark input, html.dark textarea, html.dark select {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* AdSense slot simulator styling */
+.adsense-simulator-badge {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px dashed #ca8a04;
+}
+
+/* Global transitions and high-contrast theme transitions */
+* {
+  transition-property: background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+table {
+  color: inherit !important;
+}
+
+th {
+  color: inherit !important;
+  opacity: 0.8;
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Special responsive constraints to prevent Admin Panel layout breaking on mobile */
+#admin-dashboard {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+#admin-dashboard table {
+  display: block !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#admin-dashboard .grid {
+  max-width: 100% !important;
+}
+
+#admin-dashboard input, 
+#admin-dashboard textarea, 
+#admin-dashboard select {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Custom scrollbars for tables to be clean and dark */
+#admin-dashboard table::-webkit-scrollbar {
+  height: 4px;
+}
+#admin-dashboard table::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 2px;
+}
+
+/* Infinite Marquee Animation for Top Animated Apps Ticker Bar */
+@keyframes marquee-rtl {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee-rtl {
+  display: flex;
+  width: max-content;
+  animation: marquee-rtl 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-rtl:hover {
+  animation-play-state: paused;
+}

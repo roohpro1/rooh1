@@ -1,0 +1,261 @@
+{
+  "entities": {
+    "AppReview": {
+      "title": "AppReview",
+      "description": "Represents a published app review and download entry",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The official name of the application"
+        },
+        "iconUrl": {
+          "type": "string",
+          "description": "URL of the app icon"
+        },
+        "rating": {
+          "type": "number",
+          "description": "The current official rating of the application on Google Play Store"
+        },
+        "description": {
+          "type": "string",
+          "description": "The AI-generated review article in Arabic detailing features, pros, and cons"
+        },
+        "playStoreUrl": {
+          "type": "string",
+          "description": "The official Google Play Store URL"
+        },
+        "appStoreUrl": {
+          "type": "string",
+          "description": "The official Apple App Store URL"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Extracted SEO keywords/tags for the application"
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the application"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of creation"
+        }
+      },
+      "required": ["name", "iconUrl", "rating", "description", "playStoreUrl", "category", "createdAt"]
+    },
+    "GlobalSettings": {
+      "title": "GlobalSettings",
+      "description": "Global settings for Google AdSense and ads.txt configurations",
+      "type": "object",
+      "properties": {
+        "enableAds": {
+          "type": "boolean",
+          "description": "Global toggle for AdSense ads display"
+        },
+        "adsHeaderCode": {
+          "type": "string",
+          "description": "AdSense HTML/JS code block for the header slot"
+        },
+        "adsMiddleCode": {
+          "type": "string",
+          "description": "AdSense HTML/JS code block for the article/middle slot"
+        },
+        "adsBottomCode": {
+          "type": "string",
+          "description": "AdSense HTML/JS code block for the bottom slot near download button"
+        },
+        "adsTxtContent": {
+          "type": "string",
+          "description": "The dynamic content of the website's ads.txt file"
+        },
+        "whatsappUrl": {
+          "type": "string"
+        },
+        "facebookUrl": {
+          "type": "string"
+        },
+        "tiktokUrl": {
+          "type": "string"
+        },
+        "youtubeUrl": {
+          "type": "string"
+        },
+        "instagramUrl": {
+          "type": "string"
+        },
+        "snapchatUrl": {
+          "type": "string"
+        },
+        "telegramUrl": {
+          "type": "string"
+        },
+        "xUrl": {
+          "type": "string"
+        },
+        "complaintsUrl": {
+          "type": "string"
+        }
+      },
+      "required": ["enableAds", "adsHeaderCode", "adsMiddleCode", "adsBottomCode", "adsTxtContent"]
+    },
+    "Subscriber": {
+      "title": "Subscriber",
+      "description": "A user subscription for push notifications and email updates",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Optional email address of the subscriber"
+        },
+        "subscribedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of subscription"
+        },
+        "deviceInfo": {
+          "type": "string",
+          "description": "Estimated device or browser info"
+        }
+      },
+      "required": ["subscribedAt"]
+    },
+    "OneSignalNotification": {
+      "title": "OneSignalNotification",
+      "description": "Record of a sent push notification triggered from the admin panel",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the notification"
+        },
+        "message": {
+          "type": "string",
+          "description": "The body text of the notification"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of dispatch"
+        },
+        "status": {
+          "type": "string",
+          "description": "Delivery status of the notification"
+        }
+      },
+      "required": ["title", "message", "sentAt", "status"]
+    },
+    "AppRequest": {
+      "title": "AppRequest",
+      "description": "User requested app review",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "os": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "os", "createdAt"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "User feedback, comments, and rating for specific apps",
+      "type": "object",
+      "properties": {
+        "appId": {
+          "type": "string"
+        },
+        "appName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rating": {
+          "type": "number"
+        },
+        "text": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["appId", "appName", "name", "rating", "text", "createdAt"]
+    },
+    "AiPrompt": {
+      "title": "AiPrompt",
+      "description": "Representing AI generated image prompts",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "promptCode": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        },
+        "enhancedImageUrl": {
+          "type": "string"
+        },
+        "promptText": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "downloadsCount": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "promptCode", "imageUrl", "promptText", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/apps/{appId}": {
+      "schema": "AppReview",
+      "description": "Collection storing all the published application reviews"
+    },
+    "/settings/{settingsId}": {
+      "schema": "GlobalSettings",
+      "description": "Collection storing the global configurations like AdSense scripts"
+    },
+    "/subscribers/{subscriberId}": {
+      "schema": "Subscriber",
+      "description": "Collection storing users who subscribed to push notifications"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "OneSignalNotification",
+      "description": "Collection storing logged OneSignal push notifications history"
+    },
+    "/appRequests/{requestId}": {
+      "schema": "AppRequest",
+      "description": "User requested app reviews"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "User comments, feedback and ratings stored in Firestore"
+    },
+    "/prompts/{promptId}": {
+      "schema": "AiPrompt",
+      "description": "Collection storing all the published AI image prompts and image references"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+name = "rooh-platform-worker"
+main = "index.ts"
+compatibility_date = "2024-09-23"
+
+# Cloudflare R2 Bucket Binding
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "rooh-reviews-bucket"
+preview_bucket_name = "rooh-reviews-bucket-dev"
+
+# Cloudflare KV Namespace Binding (تمت الإضافة هنا لحفظ المفاتيح والإعدادات بدون استهلاك فايربيز)
+[[kv_namespaces]]
+binding = "ROOH_KV"
+id = "26eb0eb8146643979c86545a7d9d436b"
+
+# Environment Variables
+[vars]
+SITE_URL = "https://roohme.web.app"
+FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
+# Set AUTH_SECRET and FIREBASE_API_KEY via wrangler secret put command:
+# npx wrangler secret put AUTH_SECRET
+# npx wrangler secret put FIREBASE_API_KEY
+
+# Cloudflare Routes
+# routes = [
+#   { pattern = "roohme.web.app/sitemap.xml", zone_name = "roohme.web.app" },
+#   { pattern = "roohme.web.app/review/*", zone_name = "roohme.web.app" },
+#   { pattern = "roohme.web.app/api/upload-review", zone_name = "roohme.web.app" }
+# ]

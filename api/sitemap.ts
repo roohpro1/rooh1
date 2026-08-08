@@ -1,0 +1,137 @@
+import type { Request, Response } from 'express';
+
+const SEED_SLUGS = [
+  "chatgpt-review", "whatsapp-messenger-review", "telegram-messenger-review", "duolingo-review",
+  "spotify-music-review", "capcut-video-editor-review", "tiktok-review", "instagram-review",
+  "snapchat-review", "facebook-review", "pubg-mobile-review", "free-fire-review",
+  "roblox-review", "minecraft-review", "subway-surfers-review", "candy-crush-saga-review",
+  "clash-of-clans-review", "quran-majeed-review", "muslim-pro-review", "truecaller-review",
+  "notion-review", "todoist-review", "canva-review", "inshot-review",
+  "picsart-review", "anghami-review", "binance-review", "paypal-review"
+];
+
+function cleanSlugForXml(input: string): string {
+  if (!input) return "";
+  let s = String(input).trim();
+  if (s.includes("http://") || s.includes("https://")) {
+    try {
+      const u = new URL(s);
+      s = u.pathname.replace(/^\/+/, "");
+    } catch (_) {
+      s = s.replace(/^https?:\/\/[^\/]+\//, "");
+    }
+  }
+  if (s.toLowerCase().endsWith(".html")) {
+    s = s.substring(0, s.length - 5);
+  }
+  return s.split('?')[0].split('#')[0].replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/^-+|-+$/g, "").trim();
+}
+
+/**
+ * Dynamic XML Sitemap Generator for Google Search Console & Indexing
+ * Connects directly to Firestore REST API to retrieve all approved app review slugs.
+ * Configured for Firebase Hosting / Express platform.
+ */
+export default async function handler(req: Request, res: Response) {
+  try {
+    const protocol = (req.headers['x-forwarded-proto'] as string) || 'https';
+    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || 'roohme.web.app';
+    const siteUrl = `${protocol}://${host}`;
+
+    const seenSlugs = new Set<string>();
+    let appUrls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
+
+    // Query Firestore REST API for apps documents
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0951591986";
+    const databaseId = process.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b";
+    const apiKey = process.env.VITE_FIREBASE_API_KEY || "";
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${databaseId}/documents/apps?key=${apiKey}&pageSize=1000`;
+
+    try {
+      const response = await fetch(firestoreUrl);
+      if (response.ok) {
+        const data = await response.json();
+        const documents = data.documents || [];
+
+        documents.forEach((doc: any) => {
+          const fields = doc.fields || {};
+          const docId = doc.name ? doc.name.split('/').pop() : '';
+          
+          const isApproved = fields.isApproved?.booleanValue ?? fields.published?.booleanValue ?? true;
+          const status = fields.status?.stringValue || 'published';
+
+          // EXCLUDE pending or unapproved draft articles from sitemap
+          if (status === 'pending' || status === 'draft' || isApproved === false) {
+            return;
+          }
+          
+          const rawSlug = fields.slug?.stringValue || fields.articleUrl?.stringValue || (docId ? docId.replace(/\./g, '-') + '-review' : '');
+          const cleanSlug = cleanSlugForXml(rawSlug);
+
+          const updatedAt = fields.updatedAt?.timestampValue || fields.createdAt?.timestampValue
+            ? new Date(fields.updatedAt?.timestampValue || fields.createdAt?.timestampValue).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+
+          if (cleanSlug && !seenSlugs.has(cleanSlug)) {
+            seenSlugs.add(cleanSlug);
+            appUrls.push({
+              loc: `${siteUrl}/${cleanSlug}`,
+              lastmod: updatedAt,
+              changefreq: 'weekly',
+              priority: '0.8',
+            });
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('[Sitemap API] Failed to query Firestore REST API:', e);
+    }
+
+    // Always ensure seed popular apps are included as fallback if Firestore returned empty or quota limited
+    const todayStr = new Date().toISOString().split('T')[0];
+    SEED_SLUGS.forEach(seedSlug => {
+      const cleanSlug = cleanSlugForXml(seedSlug);
+      if (cleanSlug && !seenSlugs.has(cleanSlug)) {
+        seenSlugs.add(cleanSlug);
+        appUrls.push({
+          loc: `${siteUrl}/${cleanSlug}`,
+          lastmod: todayStr,
+          changefreq: 'weekly',
+          priority: '0.8'
+        });
+      }
+    });
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${siteUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${siteUrl}/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  ${appUrls
+    .map(
+      (item) => `
+  <url>
+    <loc>${item.loc}</loc>
+    <lastmod>${item.lastmod}</lastmod>
+    <changefreq>${item.changefreq}</changefreq>
+    <priority>${item.priority}</priority>
+  </url>`
+    )
+    .join('')}
+</urlset>`;
+
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+    return res.status(200).send(xml);
+  } catch (err: any) {
+    console.error('[Sitemap API] Error generating sitemap:', err);
+    return res.status(500).send('Error generating sitemap');
+  }
+}
