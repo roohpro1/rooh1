@@ -1443,6 +1443,13 @@ async function generateAppReviewAI(
               return generateAppReviewAI(metadata, { ...customKeys, geminiApiKey: rotation.newKey });
             }
             // continue to try next model in loop
+          } else if (errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED") || errMsg.includes("API key not valid")) {
+            console.log(`[AI Generator] Gemini model (${modelName}) key unauthenticated (401). Rotating/falling back to template...`);
+            const rotation = await rotateGeminiKeyIfExhausted(activeGeminiKey, `Invalid Auth (401): ${errMsg}`);
+            if (rotation.newKey && rotation.newKey !== activeGeminiKey) {
+              return generateAppReviewAI(metadata, { ...customKeys, geminiApiKey: rotation.newKey });
+            }
+            break;
           } else {
             console.warn(`[AI Generator] Gemini model (${modelName}) warning:`, errMsg);
           }
@@ -1516,7 +1523,7 @@ async function generateSEOKeywordsAI(appInfo: {
         }
       } catch (e: any) {
         const errMsg = e?.message || String(e);
-        if (errMsg.includes("429") || errMsg.toLowerCase().includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
+        if (errMsg.includes("429") || errMsg.toLowerCase().includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED")) {
           break;
         }
       }
@@ -2207,7 +2214,7 @@ async function analyzeFeatureQueryAI(userQuery: string) {
         }
       } catch (e: any) {
         const errMsg = e?.message || String(e);
-        if (errMsg.includes("429") || errMsg.toLowerCase().includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED")) {
+        if (errMsg.includes("429") || errMsg.toLowerCase().includes("quota") || errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED")) {
           break;
         }
       }

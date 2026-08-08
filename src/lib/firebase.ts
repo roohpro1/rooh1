@@ -169,8 +169,8 @@ async function testConnection() {
   }
   try {
     await ensureAnonymousAuth();
-    await getDocFromServer(doc(db, "test", "connection"));
-    console.log("Firebase Connection verified successfully.");
+    await getDoc(doc(db, "test", "connection")).catch(() => null);
+    console.log("Firebase Connection initialized.");
   } catch (error) {
     if (error instanceof Error && error.message.includes("the client is offline")) {
       console.warn("Firebase status: Client is offline.");
