@@ -1091,13 +1091,13 @@ function markdownToFormattedHtml(
   <meta name="robots" content="index, follow">
 
   <!-- وسم Canonical لمنع تكرار المحتوى -->
-  <link rel="canonical" href="https://roohpro.com/${pageSlug}">
+  <link rel="canonical" href="https://roohpro.com/app/${pageSlug}">
 
   <!-- وسوم Open Graph لمشاركة الروابط بفاعلية (WhatsApp, Facebook) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="${pageTitle} | منصة روح">
   <meta property="og:description" content="${pageDesc}">
-  <meta property="og:url" content="https://roohpro.com/${pageSlug}">
+  <meta property="og:url" content="https://roohpro.com/app/${pageSlug}">
   <meta property="og:image" content="${pageImage}">
   <meta property="og:site_name" content="Rooh Platform">
 
@@ -1114,7 +1114,7 @@ function markdownToFormattedHtml(
     "@type": "Article",
     "name": "${pageTitle}",
     "description": "${pageDesc}",
-    "url": "https://roohpro.com/${pageSlug}",
+    "url": "https://roohpro.com/app/${pageSlug}",
     "publisher": {
       "@type": "Organization",
       "name": "Rooh Platform",
@@ -2113,7 +2113,7 @@ async function pullAndReviewApps(limit: number): Promise<{ successCount: number;
         const cleanSlug = rawSlug.replace(/\.html$/i, "");
         const r2FileName = `${cleanSlug}.html`;
         const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
-        const articleUrl = `https://roohpro.com/${cleanSlug}`;
+        const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
 
         // Format article into pristine HTML
         const formattedHtml = markdownToFormattedHtml(aiResult.article, metadata.name);
@@ -2815,7 +2815,7 @@ const handleSearchAndScrape = async (req: express.Request, res: express.Response
     const cleanSlug = rawSlug.replace(/\.html$/i, "");
     const r2FileName = `${cleanSlug}.html`;
     const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
-    const articleUrl = `https://roohpro.com/${cleanSlug}`;
+    const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
 
     // Format article into pristine HTML with store buttons & icon
     const formattedHtml = markdownToFormattedHtml(
@@ -2949,7 +2949,7 @@ function addAppToApprovedAppsJson(appData: any) {
       name: appData.name || appData.title || appData.appTitle || cleanSlug,
       slug: cleanSlug,
       cleanSlug: cleanSlug,
-      url: appData.url || `https://roohpro.com/${cleanSlug}`,
+      url: appData.url || `https://roohpro.com/app/${cleanSlug}`,
       r2Key: appData.r2FileKey || `reviews/${cleanSlug}.html`,
       r2Url: appData.r2Url || `https://roohpro.com/${cleanSlug}.html`,
       playStoreUrl: appData.playStoreUrl || '',
@@ -3238,7 +3238,7 @@ app.post("/api/admin/approve-app", async (req, res) => {
       success: true,
       message: "تم اعتماد ونشر التطبيق بنجاح وتسجيله في قائمة approved-apps.json وخريطة الموقع!",
       cleanSlug,
-      url: `https://roohpro.com/${cleanSlug}`
+      url: `https://roohpro.com/app/${cleanSlug}`
     });
   } catch (err: any) {
     console.error("Error approving app:", err);
@@ -3355,7 +3355,7 @@ export async function syncAllPublishedAppsToArchive() {
           name: data.name || data.title || data.appTitle || cleanSlug,
           slug: cleanSlug,
           cleanSlug: cleanSlug,
-          url: data.url || `https://roohpro.com/${cleanSlug}`,
+          url: data.url || `https://roohpro.com/app/${cleanSlug}`,
           r2Key: data.r2FileKey || `reviews/${cleanSlug}.html`,
           r2Url: data.r2Url || `https://roohpro.com/${cleanSlug}.html`,
           playStoreUrl: data.playStoreUrl || '',
@@ -3575,7 +3575,7 @@ app.post("/api/smart-article", async (req: express.Request, res: express.Respons
       slug: cleanSlug.replace(".html", ""),
       r2FileKey: r2FileName,
       r2Url: workerR2Url,
-      articleUrl: `https://roohpro.com/${cleanSlug.replace(".html", "")}`,
+      articleUrl: `https://roohpro.com/app/${cleanSlug.replace(".html", "")}`,
       status: "published",
       lastmod: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -3655,7 +3655,7 @@ app.post("/api/admin/clean-sync-urls", verifyAdminToken, async (req: express.Req
       const rawSlug = String(data.slug || docSnap.id || "").trim();
       const cleanSlug = rawSlug.split('?')[0].split('#')[0].replace(/\.html$/i, "").trim() || docSnap.id;
       
-      const cleanArticleUrl = `https://roohpro.com/${cleanSlug}`;
+      const cleanArticleUrl = `https://roohpro.com/app/${cleanSlug}`;
       const r2FileKey = `${cleanSlug}.html`;
       const r2Url = `https://roohpro.com/${r2FileKey}`;
 
@@ -5062,18 +5062,18 @@ app.post("/api/indexing/publish", async (req, res) => {
         name: title || name || cleanSlug,
         slug: cleanSlug,
         cleanSlug: cleanSlug,
-        url: url || `https://roohpro.com/${cleanSlug}`,
+        url: url || `https://roohpro.com/app/${cleanSlug}`,
         isApproved: true,
         status: "published",
         source: source || "يدوي من لوحة التحكم"
       });
     }
 
-    const result = await submitToGoogleIndexing({ url: url || `https://roohpro.com/${cleanSlug}`, slug: cleanSlug, appId });
+    const result = await submitToGoogleIndexing({ url: url || `https://roohpro.com/app/${cleanSlug}`, slug: cleanSlug, appId });
     res.json({
       ...result,
       cleanSlug,
-      url: url || `https://roohpro.com/${cleanSlug}`,
+      url: url || `https://roohpro.com/app/${cleanSlug}`,
       addedToApprovedApps: true
     });
   } catch (err: any) {

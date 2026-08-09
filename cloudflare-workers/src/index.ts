@@ -491,7 +491,7 @@ export default {
   }
 };
 
-// Helper: Resolve pre-rendered HTML review article across D1, R2, and Firestore
+// Helper: Resolve pre-rendered HTML review article across D1 and R2
 async function resolveArticleHtml(cleanSlug: string, env: Env, corsHeaders: Record<string, string>): Promise<Response | null> {
   const normSlug = cleanSlug.toLowerCase();
 
@@ -502,7 +502,8 @@ async function resolveArticleHtml(cleanSlug: string, env: Env, corsHeaders: Reco
       if (d1App && d1App.r2_file_key) {
         const object = await getBucket(env).get(d1App.r2_file_key) 
                     || await getBucket(env).get(`${cleanSlug}.html`)
-                    || await getBucket(env).get(`reviews/${cleanSlug}.html`);
+                    || await getBucket(env).get(`reviews/${cleanSlug}.html`)
+                    || await getBucket(env).get(`app/${cleanSlug}.html`);
         if (object) {
           const headers = new Headers(corsHeaders);
           headers.set("Content-Type", "text/html; charset=utf-8");
@@ -534,8 +535,7 @@ async function resolveArticleHtml(cleanSlug: string, env: Env, corsHeaders: Reco
     console.warn("[Hybrid Router] R2 lookup notice:", r2Err);
   }
 
-  // 3. Fallback rendering via Firestore REST API
-  return await handleRenderReview(cleanSlug, env, corsHeaders);
+  return null;
 }
 
 // Auto-Initialize D1 Tables if binding `h` exists
@@ -581,7 +581,7 @@ async function handleUploadReview(request: Request, env: Env, siteBase: string):
     packageId?: string;
   };
 
-  const { appId, name, slug, reviewHtml, playStoreUrl, packageId } = body;
+  const { appId, name, slug, reviewHtml } = body;
   if (!appId || !reviewHtml) {
     return new Response(JSON.stringify({ error: "Missing required parameters: appId or reviewHtml" }), { status: 400 });
   }
@@ -610,35 +610,12 @@ async function handleUploadReview(request: Request, env: Env, siteBase: string):
     `).bind(appId, name || appId, cleanSlug, r2FileKey, lastmod).run().catch(() => {});
   }
 
-  // 3. Sync Lightweight Metadata to Firestore via REST API
-  if (env.FIREBASE_PROJECT_ID) {
-    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/apps/${appId}?key=${env.FIREBASE_API_KEY || ''}`;
-    const firestorePayload = {
-      fields: {
-        appId: { stringValue: appId },
-        name: { stringValue: name || appId },
-        slug: { stringValue: cleanSlug },
-        status: { stringValue: "published" },
-        r2FileKey: { stringValue: r2FileKey },
-        lastmod: { stringValue: lastmod },
-        updatedAt: { stringValue: lastmod },
-        playStoreUrl: { stringValue: playStoreUrl || "" },
-        packageId: { stringValue: packageId || "" }
-      }
-    };
-    await fetch(firestoreUrl, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(firestorePayload)
-    }).catch(e => console.warn("Firestore sync notice:", e));
-  }
-
   return new Response(JSON.stringify({
     success: true,
-    message: "Article uploaded to R2 & synced to D1/Firestore",
+    message: "Article uploaded to R2 & synced to D1 edge database",
     slug: cleanSlug,
     appUrl: `${siteBase}/app/${cleanSlug}`,
-    cleanUrl: `${siteBase}/${cleanSlug}`
+    cleanUrl: `${siteBase}/app/${cleanSlug}`
   }), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
@@ -692,7 +669,6 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
 
   for (const [slug, lastmod] of uniqueMap.entries()) {
     xml += `  <url>\n    <loc>${siteBase}/app/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
-    xml += `  <url>\n    <loc>${siteBase}/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
   }
   xml += `</urlset>`;
 
@@ -700,49 +676,9 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
     status: 200,
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=300, s-maxage=600",
-      "X-Robots-Tag": "noindex, follow"
+      "Cache-Control": "public, max-age=300, s-maxage=600"
     }
   });
-}
-
-// Render Review Fallback
-async function handleRenderReview(slug: string, env: Env, corsHeaders: Record<string, string>): Promise<Response | null> {
-  if (!env.FIREBASE_PROJECT_ID) return null;
-  const firestoreQueryUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery?key=${env.FIREBASE_API_KEY || ''}`;
-
-  try {
-    const fsResponse = await fetch(firestoreQueryUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        structuredQuery: {
-          from: [{ collectionId: "apps" }],
-          where: { fieldFilter: { field: { fieldPath: "slug" }, op: "EQUAL", value: { stringValue: slug } } },
-          limit: 1
-        }
-      })
-    });
-
-    if (!fsResponse.ok) return null;
-    const results = await fsResponse.json() as any[];
-    if (!results || !results[0] || !results[0].document) return null;
-
-    const fields = results[0].document.fields;
-    const r2FileKey = fields?.r2FileKey?.stringValue || `reviews/${slug}.html`;
-
-    const object = await getBucket(env).get(r2FileKey) 
-                || await getBucket(env).get(`${slug}.html`)
-                || await getBucket(env).get(`app/${slug}.html`);
-    if (!object) return null;
-
-    const headers = new Headers(corsHeaders);
-    headers.set("Content-Type", "text/html; charset=utf-8");
-    headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
-    return new Response(object.body, { status: 200, headers });
-  } catch (_) {
-    return null;
-  }
 }
 
 // Admin AI Agent Handler

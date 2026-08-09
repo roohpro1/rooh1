@@ -68,7 +68,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Helper function: Submit newly published page URL directly to Google Indexing API
   const pingGoogleIndexingAPI = async (slug: string, appId?: string) => {
     try {
-      const pageUrl = `https://roohpro.com/${slug.replace(/^\/+/, '')}`;
+      const pageUrl = `https://roohpro.com/app/${slug.replace(/^\/+/, '')}`;
       console.log("🚀 [Google Indexing API] Submitting URL for instant indexing:", pageUrl);
       const res = await fetch("/api/indexing/publish", {
         method: "POST",
@@ -88,7 +88,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const triggerGitHubActionDeploy = async (slug: string, appId: string) => {
     try {
       const idToken = getIdTokenHelper();
-      const pageUrl = `https://roohpro.com/${slug.replace(/^\/+/, '')}`;
+      const pageUrl = `https://roohpro.com/app/${slug.replace(/^\/+/, '')}`;
       console.log("🚀 [GitHub Action Trigger] Dispatching deploy & sitemap update workflow for:", pageUrl);
       const res = await fetch("/api/admin/trigger-deploy-and-index", {
         method: "POST",
@@ -273,7 +273,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             name: appMeta.name || item.name || slug,
             slug: slug,
             cleanSlug: slug,
-            url: item.url || `https://roohpro.com/${slug}`,
+            url: item.url || `https://roohpro.com/app/${slug}`,
             r2Url: item.r2Url || `https://roohpro.com/${slug}.html`,
             rating: appMeta.rating || item.rating || 4.8,
             category: appMeta.category || item.category || "تطبيقات",
@@ -293,7 +293,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             name: app.name,
             slug: slug,
             cleanSlug: slug,
-            url: `https://roohpro.com/${slug}`,
+            url: `https://roohpro.com/app/${slug}`,
             r2Url: `https://roohpro.com/${slug}.html`,
             rating: app.rating || 4.8,
             category: app.category || "تطبيقات",
@@ -375,7 +375,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             const rawSlug = item.cleanSlug || item.slug || item.id || "";
             const cleanSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
             if (cleanSlug && publishedSlugsMap.has(cleanSlug)) {
-              const fullUrl = item.url || `https://roohpro.com/${cleanSlug}`;
+              const fullUrl = item.url || `https://roohpro.com/app/${cleanSlug}`;
               const appMeta = publishedSlugsMap.get(cleanSlug);
               recordsMap.set(cleanSlug, {
                 id: appMeta.id || item.id || `app_${cleanSlug}`,
@@ -405,7 +405,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             const rawSlug = data.slug || data.url?.replace(/^https?:\/\/[^\/]+\//, '') || "";
             const cleanSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
             if (cleanSlug && publishedSlugsMap.has(cleanSlug) && !recordsMap.has(cleanSlug)) {
-              const cleanUrl = data.url || `https://roohpro.com/${cleanSlug}`;
+              const cleanUrl = data.url || `https://roohpro.com/app/${cleanSlug}`;
               const appMeta = publishedSlugsMap.get(cleanSlug);
               recordsMap.set(cleanSlug, {
                 id: d.id,
@@ -430,7 +430,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const rawSlug = app.slug || app.cleanSlug || app.id || "";
       const cleanSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
       if (cleanSlug && !recordsMap.has(cleanSlug)) {
-        const fullUrl = `https://roohpro.com/${cleanSlug}`;
+        const fullUrl = `https://roohpro.com/app/${cleanSlug}`;
         recordsMap.set(cleanSlug, {
           id: `app_${app.id}`,
           url: fullUrl,
@@ -1393,7 +1393,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     
     const r2FileName = `${cleanSlug}.html`;
     const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
-    const articleUrl = `https://roohpro.com/${cleanSlug}`;
+    const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
 
     try {
       // Upload article HTML directly to Cloudflare Worker R2
@@ -1686,7 +1686,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       // Automatically refresh archived pages list for real-time accuracy
       await fetchArchivedAppsList();
 
-      alert(`تم اعتماد ونشر المراجعة بنجاح! 🎉\nتم أرشفة الرابط المباشر: https://roohpro.com/${cleanSlug}\nوتحديث ملف approved-apps.json على Cloudflare R2 وخريطة الموقع.`);
+      alert(`تم اعتماد ونشر المراجعة بنجاح! 🎉\nتم أرشفة الرابط المباشر: https://roohpro.com/app/${cleanSlug}\nوتحديث ملف approved-apps.json على Cloudflare R2 وخريطة الموقع.`);
       onRefreshApps();
     } catch (err) {
       handleFirestoreError(err, OperationType.UPDATE, `apps/${appId}`);
@@ -3473,7 +3473,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             <div className="flex flex-wrap items-center gap-1.5 mt-1">
                               <span className="text-[10px] text-blue-600 font-bold">{app.category}</span>
                               <span className="text-[10px] text-slate-400 font-mono select-all">
-                                https://roohpro.com/{(app.slug || app.id).replace(/\.html$/i, "")}
+                                https://roohpro.com/app/{(app.slug || app.id).replace(/\.html$/i, "")}
                               </span>
                               <span className="text-[9px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200/60 font-mono" title={`رابط التخزين الخلفي برتو: ${app.r2Url || 'https://roohpro.com/' + (app.slug || app.id).replace(/\.html$/i, "") + '.html'}`}>
                                 R2: {(app.r2FileKey || `${(app.slug || app.id).replace(/\.html$/i, "")}.html`)}
@@ -3553,7 +3553,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                               <button
                                 onClick={async () => {
                                   const cleanSlug = String(app.slug || app.id).split('?')[0].split('#')[0].replace(/\.html$/i, "").trim();
-                                  const shortUrl = `https://roohpro.com/${cleanSlug}`;
+                                  const shortUrl = `https://roohpro.com/app/${cleanSlug}`;
                                   try {
                                     await navigator.clipboard.writeText(shortUrl);
                                     alert(`تم نسخ الرابط القصير للمقال بنجاح! 🔗\n${shortUrl}`);
@@ -3562,7 +3562,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                   }
                                 }}
                                 className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-all"
-                                title={`نسخ الرابط القصير المخصص للمقال (https://roohpro.com/${(app.slug || app.id).replace(/\.html$/i, "")})`}
+                                title={`نسخ الرابط القصير المخصص للمقال (https://roohpro.com/app/${(app.slug || app.id).replace(/\.html$/i, "")})`}
                               >
                                 <Copy className="w-4 h-4 text-amber-500" />
                               </button>
@@ -3690,7 +3690,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                             }
                           }} 
                           className="p-1.5 px-2.5 text-amber-600 dark:text-amber-400 bg-white dark:bg-zinc-800 hover:bg-amber-50 border border-slate-200/70 dark:border-zinc-700 rounded-xl transition-all shadow-2xs cursor-pointer"
-                          title={`نسخ الرابط القصير المخصص (https://roohpro.com/${(app.slug || app.id).replace(/\.html$/i, "")})`}
+                          title={`نسخ الرابط القصير المخصص (https://roohpro.com/app/${(app.slug || app.id).replace(/\.html$/i, "")})`}
                         >
                           <Copy className="w-3.5 h-3.5 text-amber-500" />
                         </button>
@@ -5214,7 +5214,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 return filtered.map((item, idx) => {
                   const rawSlug = item.cleanSlug || item.slug || item.id;
                   const cleanSlug = String(rawSlug).replace(/^\/+|\.html$/gi, '').trim();
-                  const fullUrl = `https://roohpro.com/${cleanSlug}`;
+                  const fullUrl = `https://roohpro.com/app/${cleanSlug}`;
 
                   return (
                     <div

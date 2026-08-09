@@ -106,7 +106,7 @@ function generateSitemapFromApprovedApps(outputPath, publicPath) {
       if (clean && !addedSlugs.has(clean) && !['sitemap.xml', 'privacy', ''].includes(clean)) {
         addedSlugs.add(clean);
         const lastmod = (item.lastmod || item.updatedAt || today).split('T')[0];
-        xml += `  <url>\n    <loc>${siteUrl}/${clean}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        xml += `  <url>\n    <loc>${siteUrl}/app/${clean}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
       }
     }
   }

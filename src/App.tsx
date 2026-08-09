@@ -1063,7 +1063,7 @@ export default function App() {
       const cleanSlug = toShortCleanSlug(cleanAppName);
       const r2FileKey = `${cleanSlug}.html`;
       const r2Url = `https://roohpro.com/${r2FileKey}`;
-      const articleUrl = `https://roohpro.com/${cleanSlug}`;
+      const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
 
       const formattedHtml = markdownToFormattedHtmlClient(aiArticle, cleanAppName, playStoreUrl, appStoreUrl, iconUrl);
 
