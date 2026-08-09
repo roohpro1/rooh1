@@ -6,7 +6,7 @@ import { CopyLinkButton } from "./CopyLinkButton";
 import { InteractivePopularCarousel } from "./InteractivePopularCarousel";
 import { NeonChart } from "./NeonChart";
 import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp, doc, updateDoc, increment } from "firebase/firestore";
-import { db, handleFirestoreError, OperationType, isPlaceholderFirebase } from "../lib/firebase";
+import { db, handleFirestoreError, OperationType, isPlaceholderFirebase, ensureAnonymousAuth } from "../lib/firebase";
 import { canShowFullScreenAd, isRealAdCode, recordFullScreenAdShown } from "../lib/adUtils";
 
 interface AppDetailsProps {
@@ -517,6 +517,7 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
       };
 
       try {
+        await ensureAnonymousAuth();
         const docRef = await addDoc(collection(db, "reviews"), newReviewDoc);
         
         // Add locally to state immediately

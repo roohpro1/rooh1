@@ -427,6 +427,7 @@ export default function App() {
         if (!lastPing || (now - parseInt(lastPing, 10)) > 24 * 60 * 60 * 1000) {
           localStorage.setItem("last_visitor_ping", now.toString());
           try {
+            await ensureAnonymousAuth();
             const subRef = doc(db, "subscribers", visitorId);
             await setDoc(subRef, {
               visitorId: visitorId,
@@ -1223,6 +1224,7 @@ export default function App() {
     setIsSubscribing(true);
 
     try {
+      await ensureAnonymousAuth();
       const subRef = doc(collection(db, "subscribers"));
       const userAgent = window.navigator.userAgent;
       let shortDevice = "متصفح الويب";
@@ -1271,6 +1273,7 @@ export default function App() {
     setRequestError("");
     setRequestSuccess("");
     try {
+      await ensureAnonymousAuth();
       const requestRef = doc(collection(db, "appRequests"));
       await setDoc(requestRef, {
         id: requestRef.id,

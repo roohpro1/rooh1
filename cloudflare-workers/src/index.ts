@@ -52,7 +52,7 @@ export default {
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, x-api-key, Bearer, Cache-Control, Pragma",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, x-api-key, Bearer, Cache-Control, Pragma, X-Admin-Email, X-Admin-Password, x-admin-email, x-admin-password, X-Admin-Secret, x-admin-secret",
     };
 
     if (method === "OPTIONS") {
