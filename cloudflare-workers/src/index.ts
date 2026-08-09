@@ -1,14 +1,16 @@
 /**
  * Rooh Platform - Unified Cloudflare Worker Gateway & Edge Routing Engine
- * Domain Target: https://roohpro.com
- * 
- * Features & Architecture:
- * 1. Gateway Route (/app or /app/): Immediate, zero-hang Frontend SPA serving with relative path connectivity.
- * 2. Hybrid Routing Engine: Fast-path static core routing + D1 Database slug matching with R2 & Firestore fallbacks.
- * 3. Relative API Proxying: All /api/* calls automatically routed using relative paths without CORS issues.
- * 4. D1 Dynamic Links (/api/links, /l/:slug): Fast link generation & high-speed redirects.
- * 5. Dynamic Sitemap & Robots Generator (/sitemap.xml, /robots.txt).
- * 6. Admin AI Agent (/api/agent): Autonomous platform management via Groq API.
+ * Main Domain: https://roohpro.com
+ * Gateway Path: https://roohpro.com/app
+ *
+ * Requirements & Features:
+ * 1. Gateway Route (/app & /app/): Instant Frontend SPA response without infinite loading loops.
+ * 2. App Direct Routes (/app/:slug & /:slug): Supports links like https://roohpro.com/app/TikTok.
+ * 3. Relative API Routing (/api/...): Seamless relative path API connectivity with global CORS.
+ * 4. Hybrid Routing Engine: D1 Database + R2 Bucket Storage + Firestore Fallback + SPA Shell.
+ * 5. D1 Link Shortener & Links API (/api/links, /l/:slug).
+ * 6. Dynamic Sitemap XML & Robots.txt Generator (/sitemap.xml, /robots.txt).
+ * 7. Admin AI Agent Endpoint (/api/agent).
  */
 
 export interface Env {
@@ -36,16 +38,19 @@ function getBucket(env: Env): R2Bucket {
   return bucket;
 }
 
-// Fallback SPA HTML Shell for /app and frontend routing
-function getAppHtmlShell(siteBase: string): string {
+// Embedded Frontend SPA HTML Shell for Instant /app Gateway Serving (Prevents Infinite Loading)
+function getAppHtmlShell(siteBase: string, pageTitle?: string, appSlug?: string): string {
+  const title = pageTitle ? `${pageTitle} | منصة روح` : "منصة روح - دليل ومراجعات التطبيقات الموثوقة | Rooh Platform";
+  const canonicalUrl = appSlug ? `${siteBase}/app/${appSlug}` : `${siteBase}/app`;
+
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>منصة روح - دليل ومراجعات التطبيقات الموثوقة | Rooh Platform</title>
+    <title>${title}</title>
     <meta name="description" content="منصة روح المحترفة - دليل شامل واستعراض تحليلي معزز بالذكاء الاصطناعي لجميع التطبيقات والألعاب." />
-    <link rel="canonical" href="${siteBase}/app" />
+    <link rel="canonical" href="${canonicalUrl}" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -67,7 +72,7 @@ export default {
     const siteBase = (env.SITE_BASE_URL || "https://roohpro.com").replace(/\/+$/, "");
 
     // Global CORS Headers supporting custom admin headers
-    const corsHeaders = {
+    const corsHeaders: Record<string, string> = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, HEAD",
       "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, x-api-key, Bearer, Cache-Control, Pragma, X-Admin-Email, X-Admin-Password, x-admin-email, x-admin-password, X-Admin-Secret, x-admin-secret",
@@ -78,16 +83,31 @@ export default {
     }
 
     try {
-      // Initialize D1 Tables lazily if D1 binding `env.h` exists
-      if (env.h && (path.startsWith("/api/links") || path.startsWith("/l/") || path === "/app" || path === "/")) {
+      // Lazy initialization of D1 tables if D1 binding `env.h` exists
+      if (env.h && (path.startsWith("/api/links") || path.startsWith("/l/") || path.startsWith("/app") || path === "/")) {
         ctx.waitUntil(initD1Tables(env.h));
       }
 
       // ========================================================================
-      // 1. GATEWAY ROUTE: /app, /app/, or /app/* (Frontend App Serving)
+      // 1. MAIN GATEWAY & APP ROUTES: /app, /app/, or /app/:slug (e.g. /app/TikTok)
       // ========================================================================
       if (path === "/app" || path === "/app/" || path.startsWith("/app/")) {
-        // Attempt to serve static SPA index.html from R2 bucket
+        const subSlug = path.replace(/^\/app\/?/i, "").trim().replace(/\.html$/i, "");
+
+        // A. If a specific app slug is requested (e.g. /app/TikTok or /app/tiktok)
+        if (subSlug && subSlug !== "index.html") {
+          // Check D1, R2, or Firestore for pre-rendered article HTML
+          const articleResponse = await resolveArticleHtml(subSlug, env, corsHeaders);
+          if (articleResponse) return articleResponse;
+
+          // If no static article HTML exists, serve the Frontend SPA Shell with the requested app slug context
+          return new Response(getAppHtmlShell(siteBase, subSlug, subSlug), {
+            status: 200,
+            headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300", ...corsHeaders }
+          });
+        }
+
+        // B. Main Gateway Root (/app or /app/) - Immediate Frontend SPA Serving
         try {
           const bucket = getBucket(env);
           let object = await bucket.get("index.html");
@@ -104,7 +124,7 @@ export default {
           console.warn("[Worker Gateway] R2 index.html check notice:", e);
         }
 
-        // If ORIGIN_URL is configured, proxy to origin server
+        // If ORIGIN_URL is configured, proxy to origin server fallback
         if (env.ORIGIN_URL && !env.ORIGIN_URL.includes("roohpro.com")) {
           try {
             const originRes = await fetch(`${env.ORIGIN_URL.replace(/\/+$/, "")}/index.html`, {
@@ -131,7 +151,6 @@ export default {
 
       // Root Homepage Route (/)
       if (path === "/") {
-        // Try serving custom index or status
         try {
           const bucket = getBucket(env);
           const object = await bucket.get("index.html");
@@ -149,7 +168,7 @@ export default {
       }
 
       // ========================================================================
-      // 2. STATIC & SYSTEM CORE ENDPOINTS (robots.txt, sitemap.xml)
+      // 2. SYSTEM & STATIC ENDPOINTS (robots.txt, sitemap.xml, /api/health)
       // ========================================================================
       
       // Dynamic Robots.txt
@@ -176,6 +195,7 @@ export default {
           status: "online",
           service: "Rooh Platform Unified Cloudflare Worker Gateway",
           domain: "roohpro.com",
+          gatewayPath: `${siteBase}/app`,
           bindings: {
             d1: !!env.h,
             kv: !!env.ROOH_KV,
@@ -246,6 +266,7 @@ export default {
             slug: generatedSlug,
             target_url,
             shortUrl: `${siteBase}/l/${generatedSlug}`,
+            appUrl: `${siteBase}/app/${generatedSlug}`,
             apiUrl: `${siteBase}/api/links/${generatedSlug}`
           }), {
             status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders }
@@ -370,10 +391,11 @@ export default {
           httpMetadata: { contentType: "text/html; charset=utf-8", cacheControl: "public, max-age=31536000, immutable" }
         });
 
-        const cleanSlug = fileKey.replace(/^reviews\//, "").replace(/\.html$/i, "");
+        const cleanSlug = fileKey.replace(/^reviews\//, "").replace(/^app\//, "").replace(/\.html$/i, "");
         if (cleanSlug) {
           await getBucket(env).put(`reviews/${cleanSlug}.html`, content, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
           await getBucket(env).put(`${cleanSlug}.html`, content, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
+          await getBucket(env).put(`app/${cleanSlug}.html`, content, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
 
           // Also register in D1 'apps' table if available
           if (env.h) {
@@ -381,7 +403,7 @@ export default {
               INSERT INTO apps (app_id, name, slug, status, r2_file_key, lastmod)
               VALUES (?, ?, ?, 'published', ?, CURRENT_TIMESTAMP)
               ON CONFLICT(slug) DO UPDATE SET r2_file_key=excluded.r2_file_key, lastmod=CURRENT_TIMESTAMP
-            `).bind(cleanSlug, cleanSlug, cleanSlug, `${cleanSlug}.html`).run().catch(() => {}));
+            `).bind(cleanSlug, cleanSlug, cleanSlug, `reviews/${cleanSlug}.html`).run().catch(() => {}));
           }
         }
 
@@ -389,7 +411,8 @@ export default {
           success: true,
           message: "Article uploaded to R2 & registered in edge database",
           fileKey,
-          publicUrl: `${siteBase}/${cleanSlug}`
+          publicAppUrl: `${siteBase}/app/${cleanSlug}`,
+          publicCleanUrl: `${siteBase}/${cleanSlug}`
         }), {
           status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders }
         });
@@ -397,10 +420,11 @@ export default {
 
       // Direct R2 DELETE handler
       if (method === "DELETE") {
-        const cleanSlug = path.replace(/^\/+/, "").replace(/^api\/worker\/delete\//, "").replace(/^reviews\//, "").replace(/\.html$/i, "");
+        const cleanSlug = path.replace(/^\/+/, "").replace(/^api\/worker\/delete\//, "").replace(/^reviews\//, "").replace(/^app\//, "").replace(/\.html$/i, "");
         if (cleanSlug) {
           await getBucket(env).delete(`${cleanSlug}.html`).catch(() => {});
           await getBucket(env).delete(`reviews/${cleanSlug}.html`).catch(() => {});
+          await getBucket(env).delete(`app/${cleanSlug}.html`).catch(() => {});
           await getBucket(env).delete(cleanSlug).catch(() => {});
 
           if (env.h) {
@@ -416,12 +440,14 @@ export default {
       // Direct R2 HTML File GET handler (e.g. GET /clean-slug.html)
       if (method === "GET" && (path.endsWith(".html") || path.endsWith(".md"))) {
         const fileKey = path.replace(/^\/+/, "").split("?")[0];
-        const baseSlug = fileKey.replace(/^reviews\//, "").replace(/\.html$/i, "");
+        const baseSlug = fileKey.replace(/^reviews\//, "").replace(/^app\//, "").replace(/\.html$/i, "");
 
         let object = await getBucket(env).get(fileKey) 
                   || await getBucket(env).get(`reviews/${fileKey}`) 
+                  || await getBucket(env).get(`app/${fileKey}`) 
                   || await getBucket(env).get(`${baseSlug}.html`) 
-                  || await getBucket(env).get(`reviews/${baseSlug}.html`);
+                  || await getBucket(env).get(`reviews/${baseSlug}.html`)
+                  || await getBucket(env).get(`app/${baseSlug}.html`);
 
         if (object) {
           const headers = new Headers(corsHeaders);
@@ -432,52 +458,17 @@ export default {
       }
 
       // ========================================================================
-      // 6. HYBRID ROUTER FOR DYNAMIC SLUGS & ARTICLES (/:slug)
+      // 6. HYBRID ROUTER FOR DIRECT CLEAN SLUGS & ARTICLES (/:slug)
       // ========================================================================
       if (method === "GET" && path.length > 1 && !path.startsWith("/api/") && !path.startsWith("/assets/")) {
         const cleanSlug = path.replace(/^\/+|\.html$/gi, "").trim();
 
         if (cleanSlug) {
-          // Step 1: Check D1 Database for rapid slug resolution
-          if (env.h) {
-            try {
-              const d1App = await env.h.prepare("SELECT * FROM apps WHERE slug = ? AND status = 'published'").bind(cleanSlug).first() as any;
-              if (d1App && d1App.r2_file_key) {
-                const object = await getBucket(env).get(d1App.r2_file_key) || await getBucket(env).get(`${cleanSlug}.html`);
-                if (object) {
-                  const headers = new Headers(corsHeaders);
-                  headers.set("Content-Type", "text/html; charset=utf-8");
-                  headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
-                  return new Response(object.body, { status: 200, headers });
-                }
-              }
-            } catch (d1Err) {
-              console.warn("[Hybrid Router] D1 query notice:", d1Err);
-            }
-          }
+          const articleResponse = await resolveArticleHtml(cleanSlug, env, corsHeaders);
+          if (articleResponse) return articleResponse;
 
-          // Step 2: Direct R2 Bucket lookup
-          try {
-            const object = await getBucket(env).get(`${cleanSlug}.html`) 
-                        || await getBucket(env).get(`reviews/${cleanSlug}.html`)
-                        || await getBucket(env).get(cleanSlug);
-
-            if (object) {
-              const headers = new Headers(corsHeaders);
-              headers.set("Content-Type", "text/html; charset=utf-8");
-              headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
-              return new Response(object.body, { status: 200, headers });
-            }
-          } catch (r2Err) {
-            console.warn("[Hybrid Router] R2 lookup notice:", r2Err);
-          }
-
-          // Step 3: Fallback rendering via Firestore REST API
-          const renderResponse = await handleRenderReview(cleanSlug, env, corsHeaders);
-          if (renderResponse) return renderResponse;
-
-          // Step 4: Fallback to Frontend SPA Application Shell
-          return new Response(getAppHtmlShell(siteBase), {
+          // Fallback to Frontend SPA Application Shell
+          return new Response(getAppHtmlShell(siteBase, cleanSlug, cleanSlug), {
             status: 200,
             headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300", ...corsHeaders }
           });
@@ -499,6 +490,53 @@ export default {
     }
   }
 };
+
+// Helper: Resolve pre-rendered HTML review article across D1, R2, and Firestore
+async function resolveArticleHtml(cleanSlug: string, env: Env, corsHeaders: Record<string, string>): Promise<Response | null> {
+  const normSlug = cleanSlug.toLowerCase();
+
+  // 1. D1 Database query for rapid edge resolution
+  if (env.h) {
+    try {
+      const d1App = await env.h.prepare("SELECT * FROM apps WHERE (slug = ? OR LOWER(slug) = ? OR app_id = ?) AND status = 'published'").bind(cleanSlug, normSlug, cleanSlug).first() as any;
+      if (d1App && d1App.r2_file_key) {
+        const object = await getBucket(env).get(d1App.r2_file_key) 
+                    || await getBucket(env).get(`${cleanSlug}.html`)
+                    || await getBucket(env).get(`reviews/${cleanSlug}.html`);
+        if (object) {
+          const headers = new Headers(corsHeaders);
+          headers.set("Content-Type", "text/html; charset=utf-8");
+          headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
+          return new Response(object.body, { status: 200, headers });
+        }
+      }
+    } catch (d1Err) {
+      console.warn("[Hybrid Router] D1 query notice:", d1Err);
+    }
+  }
+
+  // 2. Direct R2 Bucket Lookup across multi-prefix keys
+  try {
+    const object = await getBucket(env).get(`${cleanSlug}.html`) 
+                || await getBucket(env).get(`reviews/${cleanSlug}.html`)
+                || await getBucket(env).get(`app/${cleanSlug}.html`)
+                || await getBucket(env).get(`${normSlug}.html`)
+                || await getBucket(env).get(`reviews/${normSlug}.html`)
+                || await getBucket(env).get(cleanSlug);
+
+    if (object) {
+      const headers = new Headers(corsHeaders);
+      headers.set("Content-Type", "text/html; charset=utf-8");
+      headers.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
+      return new Response(object.body, { status: 200, headers });
+    }
+  } catch (r2Err) {
+    console.warn("[Hybrid Router] R2 lookup notice:", r2Err);
+  }
+
+  // 3. Fallback rendering via Firestore REST API
+  return await handleRenderReview(cleanSlug, env, corsHeaders);
+}
 
 // Auto-Initialize D1 Tables if binding `h` exists
 async function initD1Tables(d1: D1Database): Promise<void> {
@@ -552,11 +590,14 @@ async function handleUploadReview(request: Request, env: Env, siteBase: string):
   const r2FileKey = `reviews/${cleanSlug}.html`;
   const lastmod = new Date().toISOString();
 
-  // 1. Save HTML to R2
+  // 1. Save HTML to R2 across multiple keys for high availability
   await getBucket(env).put(r2FileKey, reviewHtml, {
     httpMetadata: { contentType: "text/html; charset=utf-8", cacheControl: "public, max-age=31536000, immutable" }
   });
   await getBucket(env).put(`${cleanSlug}.html`, reviewHtml, {
+    httpMetadata: { contentType: "text/html; charset=utf-8" }
+  });
+  await getBucket(env).put(`app/${cleanSlug}.html`, reviewHtml, {
     httpMetadata: { contentType: "text/html; charset=utf-8" }
   });
 
@@ -596,7 +637,8 @@ async function handleUploadReview(request: Request, env: Env, siteBase: string):
     success: true,
     message: "Article uploaded to R2 & synced to D1/Firestore",
     slug: cleanSlug,
-    publicUrl: `${siteBase}/${cleanSlug}`
+    appUrl: `${siteBase}/app/${cleanSlug}`,
+    cleanUrl: `${siteBase}/${cleanSlug}`
   }), { status: 200, headers: { "Content-Type": "application/json" } });
 }
 
@@ -604,7 +646,7 @@ async function handleUploadReview(request: Request, env: Env, siteBase: string):
 async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: string): Promise<Response> {
   let publishedApps: Array<{ slug: string; lastmod: string }> = [];
 
-  // 1. Try D1 Database
+  // 1. Query D1 Database
   if (env.h) {
     try {
       const { results } = await env.h.prepare("SELECT slug, lastmod FROM apps WHERE status = 'published'").all();
@@ -618,7 +660,7 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
     } catch (_) {}
   }
 
-  // 2. Try R2 approved-apps.json if D1 was empty
+  // 2. Query R2 approved-apps.json if D1 had no rows
   if (publishedApps.length === 0) {
     try {
       let approvedObj = await getBucket(env).get("approved-apps.json") || await getBucket(env).get("reviews/approved-apps.json");
@@ -628,7 +670,7 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
           list.forEach((item: any) => {
             const rawSlug = item.slug || item.id || item.cleanSlug;
             if (rawSlug) {
-              const clean = String(rawSlug).trim().replace(/^\//, "").replace(/\.html$/i, "");
+              const clean = String(rawSlug).trim().replace(/^\//, "").replace(/^app\//, "").replace(/\.html$/i, "");
               publishedApps.push({ slug: clean, lastmod: String(item.lastmod || item.updatedAt || new Date().toISOString()).split("T")[0] });
             }
           });
@@ -637,7 +679,7 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
     } catch (_) {}
   }
 
-  // Deduplicate
+  // Deduplicate entries
   const uniqueMap = new Map<string, string>();
   for (const item of publishedApps) {
     if (item.slug && !uniqueMap.has(item.slug)) uniqueMap.set(item.slug, item.lastmod);
@@ -649,6 +691,7 @@ async function handleDynamicSitemap(env: Env, ctx: ExecutionContext, siteBase: s
   xml += `  <url>\n    <loc>${siteBase}/privacy</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.3</priority>\n  </url>\n`;
 
   for (const [slug, lastmod] of uniqueMap.entries()) {
+    xml += `  <url>\n    <loc>${siteBase}/app/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
     xml += `  <url>\n    <loc>${siteBase}/${slug}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
   }
   xml += `</urlset>`;
@@ -688,7 +731,9 @@ async function handleRenderReview(slug: string, env: Env, corsHeaders: Record<st
     const fields = results[0].document.fields;
     const r2FileKey = fields?.r2FileKey?.stringValue || `reviews/${slug}.html`;
 
-    const object = await getBucket(env).get(r2FileKey) || await getBucket(env).get(`${slug}.html`);
+    const object = await getBucket(env).get(r2FileKey) 
+                || await getBucket(env).get(`${slug}.html`)
+                || await getBucket(env).get(`app/${slug}.html`);
     if (!object) return null;
 
     const headers = new Headers(corsHeaders);
@@ -717,10 +762,10 @@ async function handleAdminAIAgent(request: Request, env: Env, corsHeaders: Recor
 
     const agentPrompt = `أنت الوكيل الذكي لمنصة روح (roohpro.com).
 النظام يعمل بموديل توجيه هجين (Hybrid Edge Router):
-- مسار البوابة الرئيسي: /app
+- مسار البوابة الرئيسي: ${siteBase}/app
+- مسار التطبيقات المباشر: ${siteBase}/app/:slug
 - قاعدة بيانات D1: ${env.h ? 'متصلة' : 'غير مفعلة'} (عدد الروابط: ${d1Count})
-- R2 Storage: ${getBucket(env) ? 'متصل' : 'غير متصل'}
-- الموقع: ${siteBase}`;
+- R2 Storage: ${getBucket(env) ? 'متصل' : 'غير متصل'}`;
 
     let reply = "";
     if (groqKey) {
@@ -740,7 +785,7 @@ async function handleAdminAIAgent(request: Request, env: Env, corsHeaders: Recor
     }
 
     if (!reply) {
-      reply = `🤖 **وكيل منصة روح (Rooh Edge Agent)**\n\nتم تنفيذ الأمر: "${userCommand}"\n- مسار البوابة الرئيسي: ${siteBase}/app\n- حالة D1 Database: ${env.h ? 'نشط' : 'غير مرتبط'}\n- حالة R2 Storage: نشط`;
+      reply = `🤖 **وكيل منصة روح (Rooh Edge Agent)**\n\nتم تنفيذ الأمر: "${userCommand}"\n- مسار البوابة الرئيسي: ${siteBase}/app\n- رابط التطبيق الاختباري: ${siteBase}/app/TikTok\n- حالة D1 Database: ${env.h ? 'نشط' : 'غير مرتبط'}\n- حالة R2 Storage: نشط`;
     }
 
     return new Response(JSON.stringify({ success: true, command: userCommand, reply }), {
