@@ -1045,8 +1045,8 @@ function markdownToFormattedHtml(
   const pageTitle = `دليل ومراجعة شاملة لتطبيق ${title}`;
   const pageDesc = metaDescription || `دليل واستعراض ومراجعة تفصيلية شاملة لتطبيق ${title} مع شرح كل المميزات وروابط التنزيل المباشرة والآمنة 100%.`;
   const pageKeywords = metaKeywords || `تنزيل ${title}, مراجعة ${title}, تحميل ${title}, تطبيق ${title}, منصة روح, متجر التطبيقات`;
-  const pageImage = iconUrl || `https://roohme.web.app/assets/images/og-${pageSlug}.jpg`;
-  const twitterImage = iconUrl || `https://roohme.web.app/assets/images/twitter-${pageSlug}.jpg`;
+  const pageImage = iconUrl || `https://roohpro.com/assets/images/og-${pageSlug}.jpg`;
+  const twitterImage = iconUrl || `https://roohpro.com/assets/images/twitter-${pageSlug}.jpg`;
 
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -1060,13 +1060,13 @@ function markdownToFormattedHtml(
   <meta name="robots" content="index, follow">
 
   <!-- وسم Canonical لمنع تكرار المحتوى -->
-  <link rel="canonical" href="https://roohme.web.app/${pageSlug}">
+  <link rel="canonical" href="https://roohpro.com/${pageSlug}">
 
   <!-- وسوم Open Graph لمشاركة الروابط بفاعلية (WhatsApp, Facebook) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="${pageTitle} | منصة روح">
   <meta property="og:description" content="${pageDesc}">
-  <meta property="og:url" content="https://roohme.web.app/${pageSlug}">
+  <meta property="og:url" content="https://roohpro.com/${pageSlug}">
   <meta property="og:image" content="${pageImage}">
   <meta property="og:site_name" content="Rooh Platform">
 
@@ -1083,13 +1083,13 @@ function markdownToFormattedHtml(
     "@type": "Article",
     "name": "${pageTitle}",
     "description": "${pageDesc}",
-    "url": "https://roohme.web.app/${pageSlug}",
+    "url": "https://roohpro.com/${pageSlug}",
     "publisher": {
       "@type": "Organization",
       "name": "Rooh Platform",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://roohme.web.app/assets/images/logo.png"
+        "url": "https://roohpro.com/assets/images/logo.png"
       }
     }
   }
@@ -2081,8 +2081,8 @@ async function pullAndReviewApps(limit: number): Promise<{ successCount: number;
         const rawSlug = aiResult.slug || (metadata.name ? metadata.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-review' : `${(metadata.packageId || pkg).replace(/\./g, '-')}-review`);
         const cleanSlug = rawSlug.replace(/\.html$/i, "");
         const r2FileName = `${cleanSlug}.html`;
-        const r2WorkerUrl = `https://rooh-platform-worker.roohr4046.workers.dev/${r2FileName}`;
-        const articleUrl = `https://roohme.web.app/${cleanSlug}`;
+        const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
+        const articleUrl = `https://roohpro.com/${cleanSlug}`;
 
         // Format article into pristine HTML
         const formattedHtml = markdownToFormattedHtml(aiResult.article, metadata.name);
@@ -2783,8 +2783,8 @@ const handleSearchAndScrape = async (req: express.Request, res: express.Response
     const rawSlug = aiResult.slug || (metadata.name ? metadata.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-review' : `${packageId.replace(/\./g, '-')}-review`);
     const cleanSlug = rawSlug.replace(/\.html$/i, "");
     const r2FileName = `${cleanSlug}.html`;
-    const r2WorkerUrl = `https://rooh-platform-worker.roohr4046.workers.dev/${r2FileName}`;
-    const articleUrl = `https://roohme.web.app/${cleanSlug}`;
+    const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
+    const articleUrl = `https://roohpro.com/${cleanSlug}`;
 
     // Format article into pristine HTML with store buttons & icon
     const formattedHtml = markdownToFormattedHtml(
@@ -2918,9 +2918,9 @@ function addAppToApprovedAppsJson(appData: any) {
       name: appData.name || appData.title || appData.appTitle || cleanSlug,
       slug: cleanSlug,
       cleanSlug: cleanSlug,
-      url: appData.url || `https://roohme.web.app/${cleanSlug}`,
+      url: appData.url || `https://roohpro.com/${cleanSlug}`,
       r2Key: appData.r2FileKey || `reviews/${cleanSlug}.html`,
-      r2Url: appData.r2Url || `https://rooh-platform-worker.roohr4046.workers.dev/${cleanSlug}.html`,
+      r2Url: appData.r2Url || `https://roohpro.com/${cleanSlug}.html`,
       playStoreUrl: appData.playStoreUrl || '',
       appStoreUrl: appData.appStoreUrl || '',
       iconUrl: appData.iconUrl || '',
@@ -2950,13 +2950,13 @@ function addAppToApprovedAppsJson(appData: any) {
     fs.writeFileSync(path.join(publicDataDir, "apps_cache.json"), jsonCache, "utf-8");
 
     // Async sync to Cloudflare R2 Worker using safeWorkerFetch with timeout
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json", {
+    safeWorkerFetch("https://roohpro.com/approved-apps.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonApproved
     });
 
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/data/apps_cache.json", {
+    safeWorkerFetch("https://roohpro.com/data/apps_cache.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonCache
@@ -3006,12 +3006,12 @@ function removeAppFromApprovedAppsJson(appId: string, slug?: string) {
     }
 
     // 3. Sync purged list to Cloudflare R2 Worker
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json", {
+    safeWorkerFetch("https://roohpro.com/approved-apps.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonApproved
     });
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/data/apps_cache.json", {
+    safeWorkerFetch("https://roohpro.com/data/apps_cache.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonCache
@@ -3019,13 +3019,13 @@ function removeAppFromApprovedAppsJson(appId: string, slug?: string) {
 
     // 4. Delete HTML files from Cloudflare R2
     if (cleanTargetSlug) {
-      safeWorkerFetch(`https://rooh-platform-worker.roohr4046.workers.dev/${cleanTargetSlug}.html`, {
+      safeWorkerFetch(`https://roohpro.com/${cleanTargetSlug}.html`, {
         method: "DELETE"
       });
-      safeWorkerFetch(`https://rooh-platform-worker.roohr4046.workers.dev/reviews/${cleanTargetSlug}.html`, {
+      safeWorkerFetch(`https://roohpro.com/reviews/${cleanTargetSlug}.html`, {
         method: "DELETE"
       });
-      safeWorkerFetch(`https://rooh-platform-worker.roohr4046.workers.dev/${cleanTargetSlug}`, {
+      safeWorkerFetch(`https://roohpro.com/${cleanTargetSlug}`, {
         method: "DELETE"
       });
     }
@@ -3040,7 +3040,7 @@ app.get(['/approved-apps.json', '/api/approved-apps'], async (req, res) => {
     let list = getApprovedAppsList();
     if (!list || list.length === 0) {
       try {
-        const r2Res = await fetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json");
+        const r2Res = await fetch("https://roohpro.com/approved-apps.json");
         if (r2Res.ok) {
           const r2Data = await r2Res.json();
           if (Array.isArray(r2Data) && r2Data.length > 0) {
@@ -3067,7 +3067,7 @@ app.get(['/data/apps_cache.json', '/apps_cache.json', '/api/apps_cache'], async 
     let list = getFullAppsCacheList();
     if (!list || list.length === 0) {
       try {
-        const r2Res = await fetch("https://rooh-platform-worker.roohr4046.workers.dev/data/apps_cache.json");
+        const r2Res = await fetch("https://roohpro.com/data/apps_cache.json");
         if (r2Res.ok) {
           const r2Data = await r2Res.json();
           if (Array.isArray(r2Data) && r2Data.length > 0) {
@@ -3097,7 +3097,7 @@ async function purgeAllAppsData() {
     }
     fs.writeFileSync(APPROVED_APPS_FILE, JSON.stringify([], null, 2), "utf-8");
 
-    fetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json", {
+    fetch("https://roohpro.com/approved-apps.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify([])
@@ -3207,7 +3207,7 @@ app.post("/api/admin/approve-app", async (req, res) => {
       success: true,
       message: "تم اعتماد ونشر التطبيق بنجاح وتسجيله في قائمة approved-apps.json وخريطة الموقع!",
       cleanSlug,
-      url: `https://roohme.web.app/${cleanSlug}`
+      url: `https://roohpro.com/${cleanSlug}`
     });
   } catch (err: any) {
     console.error("Error approving app:", err);
@@ -3324,9 +3324,9 @@ export async function syncAllPublishedAppsToArchive() {
           name: data.name || data.title || data.appTitle || cleanSlug,
           slug: cleanSlug,
           cleanSlug: cleanSlug,
-          url: data.url || `https://roohme.web.app/${cleanSlug}`,
+          url: data.url || `https://roohpro.com/${cleanSlug}`,
           r2Key: data.r2FileKey || `reviews/${cleanSlug}.html`,
-          r2Url: data.r2Url || `https://rooh-platform-worker.roohr4046.workers.dev/${cleanSlug}.html`,
+          r2Url: data.r2Url || `https://roohpro.com/${cleanSlug}.html`,
           playStoreUrl: data.playStoreUrl || '',
           appStoreUrl: data.appStoreUrl || '',
           iconUrl: data.iconUrl || '',
@@ -3365,13 +3365,13 @@ export async function syncAllPublishedAppsToArchive() {
     fs.writeFileSync(path.join(publicDataDir, "apps_cache.json"), jsonApproved, "utf-8");
 
     // Async sync deduplicated list to Cloudflare R2 Worker
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json", {
+    safeWorkerFetch("https://roohpro.com/approved-apps.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonApproved
     });
 
-    safeWorkerFetch("https://rooh-platform-worker.roohr4046.workers.dev/data/apps_cache.json", {
+    safeWorkerFetch("https://roohpro.com/data/apps_cache.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonApproved
@@ -3461,7 +3461,7 @@ app.post("/api/smart-article", async (req: express.Request, res: express.Respons
     }
 
     const r2FileName = cleanSlug.endsWith(".html") ? cleanSlug : `${cleanSlug}.html`;
-    const workerR2Url = `https://rooh-platform-worker.roohr4046.workers.dev/${r2FileName}`;
+    const workerR2Url = `https://roohpro.com/${r2FileName}`;
 
     // Step 1: Smart Check - Query Firebase Firestore for existing metadata
     let existingData: any = null;
@@ -3544,7 +3544,7 @@ app.post("/api/smart-article", async (req: express.Request, res: express.Respons
       slug: cleanSlug.replace(".html", ""),
       r2FileKey: r2FileName,
       r2Url: workerR2Url,
-      articleUrl: `https://roohme.web.app/${cleanSlug.replace(".html", "")}`,
+      articleUrl: `https://roohpro.com/${cleanSlug.replace(".html", "")}`,
       status: "published",
       lastmod: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -3624,9 +3624,9 @@ app.post("/api/admin/clean-sync-urls", verifyAdminToken, async (req: express.Req
       const rawSlug = String(data.slug || docSnap.id || "").trim();
       const cleanSlug = rawSlug.split('?')[0].split('#')[0].replace(/\.html$/i, "").trim() || docSnap.id;
       
-      const cleanArticleUrl = `https://roohme.web.app/${cleanSlug}`;
+      const cleanArticleUrl = `https://roohpro.com/${cleanSlug}`;
       const r2FileKey = `${cleanSlug}.html`;
-      const r2Url = `https://rooh-platform-worker.roohr4046.workers.dev/${r2FileKey}`;
+      const r2Url = `https://roohpro.com/${r2FileKey}`;
 
       if (
         data.slug !== cleanSlug ||
@@ -3655,7 +3655,7 @@ app.post("/api/admin/clean-sync-urls", verifyAdminToken, async (req: express.Req
       success: true,
       totalApps: snapshot.size,
       updatedCount,
-      message: `تمت مزامنة وتنظيف الروابط بنجاح! 🎉\nتمت معالجة ${snapshot.size} تطبيق، وتحديث ${updatedCount} تطبيق بالروابط القصيرة والنظيفة (https://roohme.web.app/clean-slug) في الفايربيز.`
+      message: `تمت مزامنة وتنظيف الروابط بنجاح! 🎉\nتمت معالجة ${snapshot.size} تطبيق، وتحديث ${updatedCount} تطبيق بالروابط القصيرة والنظيفة (https://roohpro.com/clean-slug) في الفايربيز.`
     });
   } catch (err: any) {
     console.error("[Clean & Sync URLs API Error]:", err);
@@ -3944,7 +3944,7 @@ app.get("/api/admin/system-diagnostics", async (req, res) => {
   // 3. Cloudflare R2 Storage Worker Live Ping
   const r2Start = Date.now();
   try {
-    const r2Res = await fetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json", { method: "GET" });
+    const r2Res = await fetch("https://roohpro.com/approved-apps.json", { method: "GET" });
     const r2Latency = Date.now() - r2Start;
     if (r2Res.ok) {
       const textData = await r2Res.text().catch(() => "[]");
@@ -3993,7 +3993,7 @@ app.get("/api/admin/system-diagnostics", async (req, res) => {
       details: 'انقطاع الاتصال بنقطة النهاية للـ Cloudflare Worker.',
       errorCode: 'R2_WORKER_UNREACHABLE',
       errorMessage: err?.message || String(err),
-      solutionIfFailed: 'تأكد من سلامة النطاق rooh-platform-worker.roohr4046.workers.dev وتوفر الاتصال بالشبكة.',
+      solutionIfFailed: 'تأكد من سلامة النطاق roohpro.com وتوفر الاتصال بالشبكة.',
       fallbackNotice: 'النظام يحافظ على كاش محلي بملف apps_cache.json لضمان الاستمرارية.'
     });
   }
@@ -4131,7 +4131,7 @@ function generateSmartDiagnosticReport(params: {
     section3 = `الزوار لا يواجهون أي عائق لأن خط الدفاع الثاني (Play Store Direct Scraper) يعمل تلقائياً وبكفاءة 100% بدون أي كوتا.`;
     section4 = `🛡️ **خط الدفاع الثاني فعال 100%:** محرك الكشط المباشر لصفحات Google Play يستخرج بيانات التطبيقات والصور والتقييمات مجاناً وبلا توقف.`;
   } else if (serviceId.includes("r2") || serviceId.includes("storage")) {
-    section1 = `حالة مستودع Cloudflare R2 Worker هي (${status}). زمن الاستجابة: ${latencyMs || 45}ms. السبب الحقيقي: يتم التحقق المباشر من النطاق https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json وتقديم ملفات المقالات HTML المعتمدة.`;
+    section1 = `حالة مستودع Cloudflare R2 Worker هي (${status}). زمن الاستجابة: ${latencyMs || 45}ms. السبب الحقيقي: يتم التحقق المباشر من النطاق https://roohpro.com/approved-apps.json وتقديم ملفات المقالات HTML المعتمدة.`;
     section2 = `- **خطوة 1:** افتح لوحة Cloudflare Dashboard وتأكد من ربط R2 Bucket باسم REVIEWS_BUCKET بالـ Worker الخاص بالمنصة.\n- **خطوة 2:** تأكد من صحة مسار النشر وتسجيل الرابط المعين بـ .env.`;
     section3 = `هذه الخدمة هي العصب الأساسي لحماية الفايربيز ومنح الزوار سرعة فائقة جداً لفتح المقالات خلال < 100ms.`;
     section4 = `🛡️ **الكاش المحلي الاحتياطي:** محلياً يتم الاحتفاظ بملف apps_cache.json بداخل الخادم لمنع حدوث 404 في حال حدوث صيانة طارئة بشركة Cloudflare.`;
@@ -4142,9 +4142,9 @@ function generateSmartDiagnosticReport(params: {
     section4 = `🛡️ **العزل التام لحماية الكوتا:** Frontend يقرأ المقالات المعتمدة مباشرة من approved-apps.json كملف استاتيكي خفيف.`;
   } else if (serviceId.includes("indexing") || serviceId.includes("clean_url")) {
     section1 = `حالة أرشفة جوجل الفورية (Google Indexing API): (${status}). السبب الفعلي: يتم التحقق من إعدادات Service Account JSON وإرسال إشعارات الأرشفة الفورية URL_UPDATED فور موافقة المشرف على نشر التطبيق.`;
-    section2 = `- **خطوة 1:** أنشئ حساب خدمة (Service Account) في Google Cloud Console واستخرج ملف JSON الخاص به.\n- **خطوة 2:** أضف بريد الخدمة كـ Owner في Google Search Console الخاص بموقعك https://roohme.web.app.\n- **خطوة 3:** ضع كود الحساب بملف .env تحت الاسم INDEXING_SERVICE_ACCOUNT_JSON.`;
+    section2 = `- **خطوة 1:** أنشئ حساب خدمة (Service Account) في Google Cloud Console واستخرج ملف JSON الخاص به.\n- **خطوة 2:** أضف بريد الخدمة كـ Owner في Google Search Console الخاص بموقعك https://roohpro.com.\n- **خطوة 3:** ضع كود الحساب بملف .env تحت الاسم INDEXING_SERVICE_ACCOUNT_JSON.`;
     section3 = `في حالة عدم إضافة حساب الخدمة، يعتمد محرك جوجل على قراءة sitemap.xml الديناميكية المحدثة فورياً عند إضافة أي مادة جديدة.`;
-    section4 = `🛡️ **الأرشفة الديناميكية المباشرة:** خريطة الموقع https://roohme.web.app/sitemap.xml تُولد فورياً وتضم جميع الروابط النظيفة 100%.`;
+    section4 = `🛡️ **الأرشفة الديناميكية المباشرة:** خريطة الموقع https://roohpro.com/sitemap.xml تُولد فورياً وتضم جميع الروابط النظيفة 100%.`;
   } else {
     section1 = `التشخيص الفني المباشر للخدمة (${serviceName}): الحالة الحالية هي ${status}، زمن الاستجابة ${latencyMs || 10}ms. ${errorMessage ? "ملاحظة: " + errorMessage : "الخدمة تعمل بطبيعتها وتؤدي وظائفها المحددة بالمخطط الهيكلي."}`;
     section2 = `- **خطوة 1:** مراجعة سجلات الخادم ومسار الملف المخصص (${customQuery || "server.ts"}).\n- **خطوة 2:** إعادة إجراء الاختبار المباشر عبر زر "إعادة الفحص المباشر الحقيقي".`;
@@ -4220,7 +4220,12 @@ Please write a comprehensive, dynamic, non-static Arabic response as Rooh Platfo
             return aiRes.text.trim();
           }
         } catch (mErr: any) {
-          console.warn(`[AI Agent] Gemini ${mName} notice:`, mErr?.message || mErr);
+          const errMsg = mErr?.message || String(mErr);
+          if (errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED") || errMsg.includes("API key not valid")) {
+            console.log(`[AI Agent] Gemini key invalid/unauthenticated (401) on model ${mName}. Falling back to Groq/OpenAI...`);
+            break;
+          }
+          console.warn(`[AI Agent] Gemini ${mName} notice:`, errMsg);
         }
       }
     }
@@ -4333,7 +4338,7 @@ app.post("/api/admin/analyze-diagnostics", async (req, res) => {
         "1001": { name: "خريطة التطبيق ودورة الحياة (App Map & Diagnostics)", file: "src/components/AppMapDiagnostics.tsx", details: "تعرض المكونات الأساسية وتدفق العمل بين الخادم والفايربيز وحالة المستودعات والـ 10 مفاتيح لـ Groq API." },
         "1002": { name: "إدارة المفاتيح والمتغيرات السرية (Groq/Gemini Key Manager)", file: "src/components/EnvManager.tsx", details: "تتحكم في مصفوفة الـ 10 مفاتيح المتاحة لـ Groq API، ومفاتيح Gemini API، و OneSignal App ID، وتسمح بالتبديل الفوري عبر switch_groq_key." },
         "1003": { name: "نشر ومراجعة التطبيقات بالذكاء الاصطناعي (AI Review Publisher)", file: "src/components/AdminPanel.tsx -> Publish", details: "تقوم بكشط بيانات جوجل بلاي/أبل، وإرسالها لـ Gemini لتوليد مقال صحفي شامل 1500+ كلمة وفق معايير السيو وأدسنس." },
-        "1004": { name: "إدارة المقالات والتطبيقات المنشورة (Manage Applications)", file: "src/components/AdminPanel.tsx -> Manage", details: "تتيح التعديل والحذف الكامل لمراجعات التطبيقات، وتوليد ومزامنة الـ Clean Slugs مثل https://roohme.web.app/wats." },
+        "1004": { name: "إدارة المقالات والتطبيقات المنشورة (Manage Applications)", file: "src/components/AdminPanel.tsx -> Manage", details: "تتيح التعديل والحذف الكامل لمراجعات التطبيقات، وتوليد ومزامنة الـ Clean Slugs مثل https://roohpro.com/wats." },
         "1005": { name: "مؤشر كوتا وحالة الفايربيز (Firebase Status & Usage)", file: "src/components/FirebaseUsageMeter.tsx", details: "تقيس معدل استهلاك قراءات Firestore اليومية، وتراقب استنفاد الباقة المجانية مع حماية القراءات عبر approved-apps.json." },
         "1006": { name: "مستودع وتخزين Cloudflare R2 (R2 Storage & Worker Status)", file: "src/components/R2UsageMeter.tsx", details: "تراقب الـ Worker المباشر وحفظ المقالات الاستاتيكية HTML بـ Cloudflare R2 لمنع أي قراءات من الفايربيز للزوار." },
         "1007": { name: "صفحة الأرشفة الفورية وخريطة الموقع (Google Indexing API & Sitemap)", file: "src/components/AdminPanel.tsx -> Indexing", details: "ترسل إشعارات الأرشفة الفورية URL_UPDATED لـ Google Search Console وتحدث sitemap.xml وتطلق GitHub Action." },
@@ -4933,7 +4938,7 @@ async function getGoogleAccessTokenFromRefreshToken(): Promise<string | null> {
 async function submitToGoogleIndexing(
   targetInput: string | { slug?: string; appId?: string; id?: string; url?: string; name?: string }
 ): Promise<{ success: boolean; url: string; details?: string }> {
-  const siteUrl = (process.env.SITE_URL || "https://roohme.web.app").replace(/\/+$/, "");
+  const siteUrl = (process.env.SITE_URL || "https://roohpro.com").replace(/\/+$/, "");
 
   let pageUrl = "";
   if (typeof targetInput === "string") {
@@ -5026,18 +5031,18 @@ app.post("/api/indexing/publish", async (req, res) => {
         name: title || name || cleanSlug,
         slug: cleanSlug,
         cleanSlug: cleanSlug,
-        url: url || `https://roohme.web.app/${cleanSlug}`,
+        url: url || `https://roohpro.com/${cleanSlug}`,
         isApproved: true,
         status: "published",
         source: source || "يدوي من لوحة التحكم"
       });
     }
 
-    const result = await submitToGoogleIndexing({ url: url || `https://roohme.web.app/${cleanSlug}`, slug: cleanSlug, appId });
+    const result = await submitToGoogleIndexing({ url: url || `https://roohpro.com/${cleanSlug}`, slug: cleanSlug, appId });
     res.json({
       ...result,
       cleanSlug,
-      url: url || `https://roohme.web.app/${cleanSlug}`,
+      url: url || `https://roohpro.com/${cleanSlug}`,
       addedToApprovedApps: true
     });
   } catch (err: any) {
@@ -5050,7 +5055,7 @@ app.post("/api/indexing/publish", async (req, res) => {
 app.post("/api/admin/trigger-deploy-and-index", verifyAdminToken, async (req, res) => {
   try {
     const { appId, slug, url, title, name } = req.body;
-    const siteUrl = process.env.SITE_URL || "https://roohme.web.app";
+    const siteUrl = process.env.SITE_URL || "https://roohpro.com";
     const rawSlug = slug || appId || (url ? url.replace(/^https?:\/\/[^\/]+\//, '') : '');
     const cleanSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
     const targetUrl = url || `${siteUrl}/${cleanSlug}`;
@@ -5686,7 +5691,12 @@ ${systemPromptAddition ? `\nAdditional Context:\n${systemPromptAddition}` : ""}`
             };
           }
         } catch (gErr: any) {
-          console.warn(`[Groq Fallback] Gemini ${gm} notice:`, gErr?.message || gErr);
+          const errMsg = gErr?.message || String(gErr);
+          if (errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED") || errMsg.includes("API key not valid")) {
+            console.log(`[Groq Fallback] Gemini key unauthenticated (401) on ${gm}. Breaking to next fallback provider...`);
+            break;
+          }
+          console.warn(`[Groq Fallback] Gemini ${gm} notice:`, errMsg);
         }
       }
     }
@@ -5843,7 +5853,12 @@ ${params.systemPromptAddition ? `\nLive Context:\n${params.systemPromptAddition}
             };
           }
         } catch (gErr: any) {
-          console.warn(`[Vision Agent] Gemini ${gModel} notice:`, gErr?.message || gErr);
+          const errMsg = gErr?.message || String(gErr);
+          if (errMsg.includes("401") || errMsg.includes("UNAUTHENTICATED") || errMsg.includes("API key not valid")) {
+            console.log(`[Vision Agent] Gemini key unauthenticated (401) on ${gModel}. Breaking to next fallback provider...`);
+            break;
+          }
+          console.warn(`[Vision Agent] Gemini ${gModel} notice:`, errMsg);
         }
       }
     }
@@ -6625,7 +6640,7 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
           sampleApps: approved.slice(0, 10).map((a: any) => a.name || a.slug),
           categories,
           activeKeys: { groq: activeGroq, gemini: activeGemini, elevenlabs: activeEleven },
-          r2Status: "Online (rooh-platform-worker.roohr4046.workers.dev)",
+          r2Status: "Online (roohpro.com)",
           timestamp: new Date().toISOString()
         },
         message: `عدد التطبيقات المنشورة حالياً: ${approved.length} تطبيقاً.`
@@ -6987,7 +7002,7 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
           categoriesCount: categories.length,
           categories: categories.slice(0, 8),
           sampleApps: approved.slice(0, 6).map((a: any) => ({ name: a.name, slug: a.slug, category: a.category })),
-          r2Endpoint: "https://rooh-platform-worker.roohr4046.workers.dev",
+          r2Endpoint: "https://roohpro.com",
           r2Manifest: "approved-apps.json (Online & Clean)",
           lastUpdated: new Date().toISOString()
         },
@@ -7001,7 +7016,7 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
         success: true,
         action: "check_r2_status",
         status: {
-          workerUrl: "https://rooh-platform-worker.roohr4046.workers.dev",
+          workerUrl: "https://roohpro.com",
           manifestStatus: "Online & Synced",
           totalApprovedArticles: approved.length,
           storageMode: "Cloudflare R2 Direct HTML (Zero Firestore Bloat)",
@@ -7013,12 +7028,12 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
 
     if (action === "check_seo_sitemap") {
       const approved = getApprovedAppsList() || [];
-      const sampleSlugs = approved.slice(0, 8).map((a: any) => `https://roohme.web.app/${a.slug || a.id}`);
+      const sampleSlugs = approved.slice(0, 8).map((a: any) => `https://roohpro.com/${a.slug || a.id}`);
       return res.json({
         success: true,
         action: "check_seo_sitemap",
         status: {
-          sitemapUrl: "https://roohme.web.app/sitemap.xml",
+          sitemapUrl: "https://roohpro.com/sitemap.xml",
           totalIndexedSlugs: approved.length,
           slugRule: "SEO Direct Clean URLs (خالية تماماً من لاحقة .html)",
           dynamicGeneration: "Directly streamed from approved-apps.json",
@@ -7049,7 +7064,7 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
         rules: [
           { rule: "1. Candidate Search Flow", status: "Compliant", description: "البحث عن المرشحات في Google Play و App Store قبل التوليد" },
           { rule: "2. 1500+ Words Review", status: "Compliant", description: "مقال صحفي شامل بالهيكل المنهجي والـ FAQ والكلمات المفتاحية" },
-          { rule: "3. Clean URLs & Slugs", status: "Compliant", description: "روابط نظيفة مباشرة https://roohme.web.app/Slug بدون .html" },
+          { rule: "3. Clean URLs & Slugs", status: "Compliant", description: "روابط نظيفة مباشرة https://roohpro.com/Slug بدون .html" },
           { rule: "4. R2 Storage Separation", status: "Compliant", description: "حفظ المقالات في R2 فقط وقراءة الزوار من approved-apps.json" }
         ],
         message: "تم تدقيق ومطابقة المنصة بالكامل مع القواعد الأربع الإلزامية في AGENTS.md بنسبة 100%!"
@@ -7074,7 +7089,7 @@ app.post("/api/admin/agent-execute", verifyAdminToken, async (req, res) => {
           geminiKeys: { total: (config.geminiKeys || []).length, active: geminiActive },
           elevenlabsKeys: { total: (config.elevenlabsKeys || []).length, active: elevenActive },
           githubTokens: { total: (config.githubTokens || []).length, active: githubActive },
-          r2Endpoint: "Connected (rooh-platform-worker.roohr4046.workers.dev)",
+          r2Endpoint: "Connected (roohpro.com)",
           timestamp: new Date().toISOString()
         },
         message: "تم إجراء فحص شامل لكافة مكونات النظام ومفاتيح الـ APIs!"
@@ -7140,7 +7155,7 @@ app.post("/api/admin/agent-chat", verifyAdminToken, async (req, res) => {
 - Active Groq LLaMA Keys: ${activeGroqKeys} / ${(config.groqKeys || []).length}
 - Active Gemini AI Keys: ${activeGeminiKeys} / ${(config.geminiKeys || []).length}
 - Active ElevenLabs Voice Keys: ${activeElevenKeys} / ${(config.elevenlabsKeys || []).length}
-- Cloudflare R2 Storage: Online & Active (Endpoint: https://rooh-platform-worker.roohr4046.workers.dev)
+- Cloudflare R2 Storage: Online & Active (Endpoint: https://roohpro.com)
 - Active Theme: ${contextInfo?.themeColor || 'Emerald'}
 - Current View: ${contextInfo?.activeTab || 'developer-dashboard'}
 ${contextInfo?.lastAction ? `- Last Developer Action: ${contextInfo.lastAction}` : ''}`;
@@ -7462,8 +7477,8 @@ function updateLocalAppsCache(newItems: Array<{ slug: string; lastmod?: string; 
           name: n.name || old.name || s,
           slug: s,
           cleanSlug: s,
-          url: n.url || old.url || `https://roohme.web.app/${s}`,
-          r2Url: n.r2Url || old.r2Url || `https://rooh-platform-worker.roohr4046.workers.dev/${s}.html`,
+          url: n.url || old.url || `https://roohpro.com/${s}`,
+          r2Url: n.r2Url || old.r2Url || `https://roohpro.com/${s}.html`,
           iconUrl: n.iconUrl || old.iconUrl || '',
           category: n.category || old.category || 'تطبيقات',
           rating: n.rating || old.rating || 4.8,
@@ -7483,7 +7498,7 @@ function updateLocalAppsCache(newItems: Array<{ slug: string; lastmod?: string; 
     fs.writeFileSync(path.join(publicDataDir, "apps_cache.json"), jsonStr, "utf-8");
 
     // Async sync to Cloudflare R2 Worker
-    fetch("https://rooh-platform-worker.roohr4046.workers.dev/data/apps_cache.json", {
+    fetch("https://roohpro.com/data/apps_cache.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: jsonStr
@@ -7526,7 +7541,7 @@ async function getIndexedAppPages(): Promise<Array<{ slug: string; lastmod?: str
     let approvedList = getApprovedAppsList();
     if (!approvedList || approvedList.length === 0) {
       try {
-        const r2Res = await fetch("https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json");
+        const r2Res = await fetch("https://roohpro.com/approved-apps.json");
         if (r2Res.ok) {
           const r2Data = await r2Res.json();
           if (Array.isArray(r2Data) && r2Data.length > 0) {
@@ -7613,18 +7628,6 @@ async function getIndexedAppPages(): Promise<Array<{ slug: string; lastmod?: str
     cached.forEach(c => addPage(c.slug, c.lastmod));
   }
 
-  // Source 4: Seed apps guarantee
-  const seedApps = [
-    "chatgpt-review", "whatsapp-messenger-review", "telegram-messenger-review", "duolingo-review",
-    "spotify-music-review", "capcut-video-editor-review", "tiktok-review", "instagram-review",
-    "snapchat-review", "facebook-review", "pubg-mobile-review", "free-fire-review",
-    "roblox-review", "minecraft-review", "subway-surfers-review", "candy-crush-saga-review",
-    "clash-of-clans-review", "quran-majeed-review", "muslim-pro-review", "truecaller-review",
-    "notion-review", "todoist-review", "canva-review", "inshot-review",
-    "picsart-review", "anghami-review", "binance-review", "paypal-review"
-  ];
-  seedApps.forEach(s => addPage(s));
-
   return pages;
 }
 
@@ -7634,7 +7637,7 @@ async function startServer() {
   app.get(['/robots.txt', '/robots.txt/'], (req, res) => {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
-    const siteUrl = process.env.SITE_URL || 'https://roohme.web.app';
+    const siteUrl = process.env.SITE_URL || 'https://roohpro.com';
     res.send(`User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`);
   });
 
@@ -7642,7 +7645,7 @@ async function startServer() {
   app.get(['/sitemap.xml', '/sitemap', '/sitemap.xml/'], async (req, res) => {
     try {
       ensureAdminFirebaseInitialized();
-      const siteUrl = process.env.SITE_URL || 'https://roohme.web.app';
+      const siteUrl = process.env.SITE_URL || 'https://roohpro.com';
       const appPages = await getIndexedAppPages();
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
@@ -7673,6 +7676,70 @@ async function startServer() {
       console.error("Error generating dynamic sitemap from Firestore:", error);
       res.status(500).send("Error generating sitemap");
     }
+  });
+
+  // Server-Side Dynamic SEO Meta Tags Injection for Search Engine Crawlers & Social Cards
+  app.get('*', async (req, res, next) => {
+    const rawPath = req.path || '/';
+    if (
+      rawPath.startsWith('/api/') ||
+      rawPath.startsWith('/assets/') ||
+      rawPath.startsWith('/@') ||
+      rawPath.includes('.') ||
+      rawPath === '/' ||
+      rawPath === '/privacy' ||
+      rawPath === '/sitemap.xml' ||
+      rawPath === '/robots.txt'
+    ) {
+      return next();
+    }
+
+    const cleanSlug = rawPath.replace(/^\/+|\.html$/gi, '').trim().toLowerCase();
+    if (!cleanSlug) return next();
+
+    try {
+      const approvedList = getApprovedAppsList();
+      const appData = approvedList.find((a: any) => {
+        const itemSlug = String(a.cleanSlug || a.slug || a.id || '').toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
+        return itemSlug === cleanSlug;
+      });
+
+      if (appData) {
+        const title = appData.name || appData.title || cleanSlug;
+        const pageTitle = `دليل ومراجعة شاملة لتطبيق ${title} | منصة روح`;
+        const pageDesc = appData.description || `دليل واستعراض ومراجعة تفصيلية شاملة لتطبيق ${title} مع شرح كل المميزات وروابط التنزيل المباشرة والآمنة 100%.`;
+        const pageImage = appData.iconUrl || `https://roohpro.com/assets/images/og-home.jpg`;
+        const canonicalUrl = `https://roohpro.com/${cleanSlug}`;
+
+        let indexPath = path.join(process.cwd(), "index.html");
+        if (process.env.NODE_ENV === "production") {
+          indexPath = path.join(process.cwd(), "dist", "index.html");
+        }
+
+        if (fs.existsSync(indexPath)) {
+          let html = fs.readFileSync(indexPath, "utf-8");
+
+          // Inject title, canonical, and social cards directly into HTML <head>
+          html = html.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
+          html = html.replace(/<meta name="description" content=".*?"/i, `<meta name="description" content="${pageDesc}"`);
+          html = html.replace(/<link rel="canonical" href=".*?"/i, `<link rel="canonical" href="${canonicalUrl}"`);
+          html = html.replace(/<meta property="og:title" content=".*?"/i, `<meta property="og:title" content="${pageTitle}"`);
+          html = html.replace(/<meta property="og:description" content=".*?"/i, `<meta property="og:description" content="${pageDesc}"`);
+          html = html.replace(/<meta property="og:url" content=".*?"/i, `<meta property="og:url" content="${canonicalUrl}"`);
+          html = html.replace(/<meta property="og:image" content=".*?"/i, `<meta property="og:image" content="${pageImage}"`);
+          html = html.replace(/<meta name="twitter:title" content=".*?"/i, `<meta name="twitter:title" content="${pageTitle}"`);
+          html = html.replace(/<meta name="twitter:description" content=".*?"/i, `<meta name="twitter:description" content="${pageDesc}"`);
+          html = html.replace(/<meta name="twitter:image" content=".*?"/i, `<meta name="twitter:image" content="${pageImage}"`);
+
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          return res.status(200).send(html);
+        }
+      }
+    } catch (err) {
+      console.warn("[SEO Injection Notice]", err);
+    }
+
+    next();
   });
 
   if (process.env.NODE_ENV !== "production") {

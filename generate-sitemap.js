@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // رابط الـ Worker الديناميكي الحقيقي الخاص بك
-const WORKER_SITEMAP_URL = 'https://rooh-platform-worker.roohr4046.workers.dev/sitemap.xml';
+const WORKER_SITEMAP_URL = 'https://roohpro.com/sitemap.xml';
 
 function fetchUrlWithRedirects(url, maxRedirects = 5) {
   return new Promise((resolve, reject) => {
@@ -68,7 +68,7 @@ async function fetchAndSaveSitemap() {
 }
 
 function generateSitemapFromApprovedApps(outputPath, publicPath) {
-  const siteUrl = 'https://roohme.web.app';
+  const siteUrl = 'https://roohpro.com';
   let apps = [];
   const localJsonPaths = [
     path.join(__dirname, 'data', 'approved-apps.json'),
@@ -128,7 +128,7 @@ function writeRobotsTxt() {
   const robotsTxt = `User-agent: *
 Allow: /
 
-Sitemap: https://roohme.web.app/sitemap.xml
+Sitemap: https://roohpro.com/sitemap.xml
 `;
   const distRobots = path.join(__dirname, 'dist', 'robots.txt');
   const publicRobots = path.join(__dirname, 'public', 'robots.txt');

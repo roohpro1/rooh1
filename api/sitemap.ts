@@ -1,15 +1,5 @@
 import type { Request, Response } from 'express';
 
-const SEED_SLUGS = [
-  "chatgpt-review", "whatsapp-messenger-review", "telegram-messenger-review", "duolingo-review",
-  "spotify-music-review", "capcut-video-editor-review", "tiktok-review", "instagram-review",
-  "snapchat-review", "facebook-review", "pubg-mobile-review", "free-fire-review",
-  "roblox-review", "minecraft-review", "subway-surfers-review", "candy-crush-saga-review",
-  "clash-of-clans-review", "quran-majeed-review", "muslim-pro-review", "truecaller-review",
-  "notion-review", "todoist-review", "canva-review", "inshot-review",
-  "picsart-review", "anghami-review", "binance-review", "paypal-review"
-];
-
 function cleanSlugForXml(input: string): string {
   if (!input) return "";
   let s = String(input).trim();
@@ -27,19 +17,40 @@ function cleanSlugForXml(input: string): string {
   return s.split('?')[0].split('#')[0].replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/^-+|-+$/g, "").trim();
 }
 
-/**
- * Dynamic XML Sitemap Generator for Google Search Console & Indexing
- * Connects directly to Firestore REST API to retrieve all approved app review slugs.
- * Configured for Firebase Hosting / Express platform.
- */
 export default async function handler(req: Request, res: Response) {
   try {
     const protocol = (req.headers['x-forwarded-proto'] as string) || 'https';
-    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || 'roohme.web.app';
+    const host = (req.headers['x-forwarded-host'] as string) || req.headers.host || 'roohpro.com';
     const siteUrl = `${protocol}://${host}`;
 
     const seenSlugs = new Set<string>();
     let appUrls: Array<{ loc: string; lastmod: string; changefreq: string; priority: string }> = [];
+
+    // Query Cloudflare R2 / KV / D1 or Firestore REST API for approved apps
+    try {
+      const approvedRes = await fetch(`${siteUrl}/approved-apps.json`).catch(() => null);
+      if (approvedRes && approvedRes.ok) {
+        const approvedList = await approvedRes.json();
+        if (Array.isArray(approvedList)) {
+          approvedList.forEach((item: any) => {
+            const rawSlug = item.cleanSlug || item.slug || item.id;
+            const cleanSlug = cleanSlugForXml(rawSlug);
+            const updatedAt = item.lastmod || item.updatedAt ? String(item.lastmod || item.updatedAt).split('T')[0] : new Date().toISOString().split('T')[0];
+            if (cleanSlug && !seenSlugs.has(cleanSlug)) {
+              seenSlugs.add(cleanSlug);
+              appUrls.push({
+                loc: `${siteUrl}/${cleanSlug}`,
+                lastmod: updatedAt,
+                changefreq: 'weekly',
+                priority: '0.8',
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[Sitemap API] Approved apps fetch notice:', e);
+    }
 
     // Query Firestore REST API for apps documents
     const projectId = process.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0951591986";
@@ -87,20 +98,7 @@ export default async function handler(req: Request, res: Response) {
       console.warn('[Sitemap API] Failed to query Firestore REST API:', e);
     }
 
-    // Always ensure seed popular apps are included as fallback if Firestore returned empty or quota limited
-    const todayStr = new Date().toISOString().split('T')[0];
-    SEED_SLUGS.forEach(seedSlug => {
-      const cleanSlug = cleanSlugForXml(seedSlug);
-      if (cleanSlug && !seenSlugs.has(cleanSlug)) {
-        seenSlugs.add(cleanSlug);
-        appUrls.push({
-          loc: `${siteUrl}/${cleanSlug}`,
-          lastmod: todayStr,
-          changefreq: 'weekly',
-          priority: '0.8'
-        });
-      }
-    });
+    // XML Generation
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

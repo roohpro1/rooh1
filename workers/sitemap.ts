@@ -25,7 +25,7 @@ export default {
       return response;
     }
 
-    const siteUrl = env.SITE_URL || 'https://roohme.web.app';
+    const siteUrl = env.SITE_URL || 'https://roohpro.com';
 
     try {
       let publishedApps: Array<{ slug: string; lastmod: string }> = [];

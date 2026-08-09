@@ -15,7 +15,7 @@ export default {
     try {
       // 0. Dynamic Robots.txt Route
       if ((path === '/robots.txt' || path === '/robots.txt/') && method === 'GET') {
-        const txt = `User-agent: *\nAllow: /\n\nSitemap: https://roohme.web.app/sitemap.xml\n`;
+        const txt = `User-agent: *\nAllow: /\n\nSitemap: https://roohpro.com/sitemap.xml\n`;
         return new Response(txt, {
           status: 200,
           headers: {

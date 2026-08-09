@@ -1061,8 +1061,8 @@ export default function App() {
       }
       const cleanSlug = toShortCleanSlug(cleanAppName);
       const r2FileKey = `${cleanSlug}.html`;
-      const r2Url = `https://rooh-platform-worker.roohr4046.workers.dev/${r2FileKey}`;
-      const articleUrl = `https://roohme.web.app/${cleanSlug}`;
+      const r2Url = `https://roohpro.com/${r2FileKey}`;
+      const articleUrl = `https://roohpro.com/${cleanSlug}`;
 
       const formattedHtml = markdownToFormattedHtmlClient(aiArticle, cleanAppName, playStoreUrl, appStoreUrl, iconUrl);
 
@@ -1630,7 +1630,7 @@ export default function App() {
       "/approved-apps.json",
       "/apps_cache.json",
       "/data/apps_cache.json",
-      "https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json"
+      "https://roohpro.com/approved-apps.json"
     ];
 
     for (const url of staticEndpoints) {

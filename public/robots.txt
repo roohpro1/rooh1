@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://roohme.web.app/sitemap.xml
+Sitemap: https://roohpro.com/sitemap.xml

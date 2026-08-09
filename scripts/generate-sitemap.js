@@ -8,7 +8,7 @@ import { getFirestore } from 'firebase-admin/firestore';
  * Fetches all app reviews and pages from Firestore and outputs a valid XML sitemap.
  */
 async function generateSitemap() {
-  const siteUrl = process.env.SITE_URL || 'https://roohme.web.app';
+  const siteUrl = process.env.SITE_URL || 'https://roohpro.com';
   console.log(`[Sitemap Generator] Generating sitemap for: ${siteUrl}`);
 
   let appUrls = [];

@@ -59,7 +59,7 @@ export const R2UsageMeter: React.FC<R2UsageMeterProps> = ({ allApps = [], onRefr
 
     const startTime = Date.now();
     try {
-      const cacheBustUrl = `https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json?t=${Date.now()}`;
+      const cacheBustUrl = `https://roohpro.com/approved-apps.json?t=${Date.now()}`;
       const res = await fetch(cacheBustUrl, { method: "GET" });
       const latency = Date.now() - startTime;
       
@@ -108,7 +108,7 @@ export const R2UsageMeter: React.FC<R2UsageMeterProps> = ({ allApps = [], onRefr
     setTestFetchLoading(true);
     setTestFetchResult(null);
 
-    const targetUrl = `https://rooh-platform-worker.roohr4046.workers.dev/${cleanSlug}.html?t=${Date.now()}`;
+    const targetUrl = `https://roohpro.com/${cleanSlug}.html?t=${Date.now()}`;
     try {
       const res = await fetch(targetUrl);
       const text = await res.text();
@@ -228,7 +228,7 @@ export const R2UsageMeter: React.FC<R2UsageMeterProps> = ({ allApps = [], onRefr
 • عمليات القراءة الشهرية (Class B Reads): ${estimatedReadsUsed.toLocaleString()} / ${CLASS_B_READS_LIMIT.toLocaleString()} (${readsPercentage}%)
 • عمليات الكتابة الشهرية (Class A Writes): ${estimatedWritesUsed.toLocaleString()} / ${CLASS_A_WRITES_LIMIT.toLocaleString()} (${writesPercentage}%)
 • المساحة المستهلكة (Storage): ${estimatedStorageMb} MB / ${STORAGE_LIMIT_MB} MB (${storagePercentage}%)
-• رابط فحص الـ Worker المباشر: https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json
+• رابط فحص الـ Worker المباشر: https://roohpro.com/approved-apps.json
 ${testFetchResult ? `• نتيجة آخر فحص للمقال (${testSlugInput}): Status ${testFetchResult.status}, Size ${testFetchResult.sizeKb} KB, Success: ${testFetchResult.success}${testFetchResult.error ? ` - Error: ${testFetchResult.error}` : ""}` : ""}
 ${customNote ? `• ملاحظة المطور الإضافية: ${customNote}` : ""}
 
@@ -458,7 +458,7 @@ ${customNote ? `• ملاحظة المطور الإضافية: ${customNote}` :
             <div className="min-w-0 flex-1">
               <span className="text-zinc-500 block text-[10px]">نطاق Cloudflare Worker</span>
               <a
-                href="https://rooh-platform-worker.roohr4046.workers.dev/approved-apps.json"
+                href="https://roohpro.com/approved-apps.json"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-mono text-amber-300 hover:underline truncate block text-xs"

@@ -1,29 +1,33 @@
-name = "rooh-platform-worker"
+name = "rooh-pro"
 main = "index.ts"
-compatibility_date = "2024-09-23"
+compatibility_date = "2026-08-09"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "h"
+database_name = "h"
+database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
+
+# Cloudflare KV Namespace Binding
+[[kv_namespaces]]
+binding = "ROOH_KV"
+namespace_id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
 # Cloudflare R2 Bucket Binding
 [[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "rooh-reviews-bucket"
-preview_bucket_name = "rooh-reviews-bucket-dev"
+binding = "roohme"
+bucket_name = "roohme"
 
-# Cloudflare KV Namespace Binding (تمت الإضافة هنا لحفظ المفاتيح والإعدادات بدون استهلاك فايربيز)
-[[kv_namespaces]]
-binding = "ROOH_KV"
-id = "26eb0eb8146643979c86545a7d9d436b"
+[[r2_buckets]]
+binding = "ROOH_R2"
+bucket_name = "roohme"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "roohme"
 
 # Environment Variables
 [vars]
-SITE_URL = "https://roohme.web.app"
+SITE_URL = "https://roohpro.com"
+SITE_BASE_URL = "https://roohpro.com"
 FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
-# Set AUTH_SECRET and FIREBASE_API_KEY via wrangler secret put command:
-# npx wrangler secret put AUTH_SECRET
-# npx wrangler secret put FIREBASE_API_KEY
-
-# Cloudflare Routes
-# routes = [
-#   { pattern = "roohme.web.app/sitemap.xml", zone_name = "roohme.web.app" },
-#   { pattern = "roohme.web.app/review/*", zone_name = "roohme.web.app" },
-#   { pattern = "roohme.web.app/api/upload-review", zone_name = "roohme.web.app" }
-# ]

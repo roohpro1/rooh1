@@ -99,7 +99,7 @@ export default {
           appId: payload.appId,
           slug: cleanSlug,
           r2Key,
-          publicUrl: `${env.SITE_URL || 'https://roohme.web.app'}/review/${cleanSlug}`,
+          publicUrl: `${env.SITE_URL || 'https://roohpro.com'}/review/${cleanSlug}`,
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
       );

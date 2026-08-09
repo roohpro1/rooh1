@@ -244,12 +244,12 @@ export const AppMapDiagnostics: React.FC = () => {
       stepNumber: 4,
       id: 'step_clean_url',
       title: 'مرحلة العرض المباشر والرابط النظيف (Clean SEO Direct Slug)',
-      subtitle: 'توليد الرابط المباشر https://roohme.web.app/Slug بدون .html',
+      subtitle: 'توليد الرابط المباشر https://roohpro.com/Slug بدون .html',
       functionName: 'app.get("/:cleanSlug")',
       sourceFile: 'server.ts & src/App.tsx',
       icon: Globe,
       status: 'healthy',
-      description: 'عند دخول الزائر للرابط النظيف (مثال: https://roohme.web.app/whatsapp)، يجلب الموقع محتوى الـ HTML مباشرة من Cloudflare R2 مجاناً، ويُعرض للزائر دون استهلاك أي قراءات من الفايربيز.',
+      description: 'عند دخول الزائر للرابط النظيف (مثال: https://roohpro.com/whatsapp)، يجلب الموقع محتوى الـ HTML مباشرة من Cloudflare R2 مجاناً، ويُعرض للزائر دون استهلاك أي قراءات من الفايربيز.',
       dataReadWritePattern: 'قراءة سريعة جداً ومجانية من Cloudflare R2 / approved-apps.json -> 0 قراءات من الفايربيز.',
       potentialErrors: [
         {
@@ -387,7 +387,7 @@ export const AppMapDiagnostics: React.FC = () => {
           { 
             step: 'المرحلة 2: توليد المقال الموسع 1500+ كلمة بـ Gemini', 
             status: 'ok', 
-            message: `تجهيز البرومبت الصحفي وإجراء التوليد المنهجي والرابط النظيف: https://roohme.web.app/${cleanSlug}` 
+            message: `تجهيز البرومبت الصحفي وإجراء التوليد المنهجي والرابط النظيف: https://roohpro.com/${cleanSlug}` 
           }
         ]
       }));
@@ -401,7 +401,7 @@ export const AppMapDiagnostics: React.FC = () => {
           { 
             step: 'المرحلة 3: التخزين الخفيف بـ Cloudflare R2 & approved-apps.json', 
             status: 'ok', 
-            message: `توليد ملف HTML المسار: https://rooh-platform-worker.roohr4046.workers.dev/${cleanSlug}.html وتحديث القائمة المعتمدة.` 
+            message: `توليد ملف HTML المسار: https://roohpro.com/${cleanSlug}.html وتحديث القائمة المعتمدة.` 
           },
           { 
             step: 'المرحلة 4: العرض الفوري والوصول المستقل للزوار', 
@@ -419,7 +419,7 @@ export const AppMapDiagnostics: React.FC = () => {
       setTestResults(prev => ({
         running: false,
         stepLogs: prev?.stepLogs || [],
-        finalUrl: `https://roohme.web.app/${cleanSlug}`,
+        finalUrl: `https://roohpro.com/${cleanSlug}`,
         cleanSlug: cleanSlug,
         timeTakenMs: Date.now() - startTime
       }));

@@ -1,17 +1,27 @@
 # wrangler.toml - Cloudflare Worker Configuration for Rooh Platform
-name = "rooh-platform-worker"
+name = "rooh-pro"
 main = "src/index.ts"
-compatibility_date = "2026-03-01"
+compatibility_date = "2026-08-09"
 
-# KV Storage
+# D1 Database Binding
+[[d1_databases]]
+binding = "h"
+database_name = "h"
+database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
+
+# KV Namespace Binding
 [[kv_namespaces]]
 binding = "ROOH_KV"
-id = "26eb0eb8146643979c86545a7d9d436b"
+namespace_id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
-# R2 Storage
+# R2 Bucket Binding
+[[r2_buckets]]
+binding = "roohme"
+bucket_name = "roohme"
+
 [[r2_buckets]]
 binding = "ROOH_R2"
-bucket_name = "rooh-r2-storage"
+bucket_name = "roohme"
 
 [[r2_buckets]]
 binding = "REVIEWS_BUCKET"
@@ -20,4 +30,5 @@ bucket_name = "roohme"
 # Environment Variables
 [vars]
 FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
-SITE_BASE_URL = "https://roohme.web.app"
+SITE_BASE_URL = "https://roohpro.com"
+
