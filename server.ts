@@ -7718,6 +7718,9 @@ async function startServer() {
       rawPath.startsWith('/@') ||
       rawPath.includes('.') ||
       rawPath === '/' ||
+      rawPath === '/app' ||
+      rawPath === '/app/' ||
+      rawPath.startsWith('/app/') ||
       rawPath === '/privacy' ||
       rawPath === '/sitemap.xml' ||
       rawPath === '/robots.txt'
