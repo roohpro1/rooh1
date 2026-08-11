@@ -11,7 +11,7 @@ on:
 
 jobs:
   build_and_deploy:
-    name: Build Sitemap and Deploy to Firebase Hosting
+    name: Build Sitemap and Assets
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -34,14 +34,6 @@ jobs:
 
       - name: Generate Sitemap Dynamically
         run: node generate-sitemap.js
-
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          channelId: live
-          projectId: gen-lang-client-0951591986
 
   deploy_worker:
     name: Publish to Cloudflare Workers
