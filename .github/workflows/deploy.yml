@@ -1,4 +1,4 @@
-name: Automatic Deploy and Sitemap Regeneration
+name: Automatic Deploy to Cloudflare Pages & Workers
 
 on:
   workflow_dispatch:
@@ -10,8 +10,8 @@ on:
       - master
 
 jobs:
-  build_and_deploy:
-    name: Build Sitemap and Assets
+  deploy_pages:
+    name: Build & Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -35,6 +35,18 @@ jobs:
       - name: Generate Sitemap Dynamically
         run: node generate-sitemap.js
 
+      - name: Ensure _redirects in dist
+        run: cp public/_redirects dist/_redirects || true
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
+          projectName: discover-app
+          directory: dist
+          gitToPagesmapping: false
+
   deploy_worker:
     name: Publish to Cloudflare Workers
     runs-on: ubuntu-latest
@@ -52,10 +64,7 @@ jobs:
 
       - name: Publish to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
-        env:
-          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
           workingDirectory: 'cloudflare-workers'
-

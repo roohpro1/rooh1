@@ -24,9 +24,7 @@ jobs:
 
       - name: Publish to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
-        env:
-          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
           workingDirectory: 'cloudflare-workers'

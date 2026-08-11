@@ -1,5 +1,5 @@
 # wrangler.toml - Cloudflare Worker Configuration for Rooh Platform
-name = "rooh-pro"
+name = "discover-app"
 main = "src/index.ts"
 compatibility_date = "2026-08-09"
 
