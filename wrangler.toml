@@ -18,7 +18,7 @@ database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
 # KV Namespace Binding
 [[kv_namespaces]]
 binding = "ROOH_KV"
-namespace_id = "6d9110610f2c45b09c15d3f2f5dee50a"
+id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
 # R2 Bucket Bindings
 [[r2_buckets]]
