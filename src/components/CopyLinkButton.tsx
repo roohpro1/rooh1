@@ -21,12 +21,13 @@ export const CopyLinkButton: React.FC<CopyLinkButtonProps> = ({
   const handleCopyLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    const siteUrl = typeof window !== 'undefined' && window.location.hostname.includes('roohme') ? window.location.origin : 'https://roohme.web.app';
-    const rawSlug = app.slug || app.appCode || (/^\d{5}$/.test(app.id) ? app.id : app.packageId || app.id);
-    const cleanSlug = String(rawSlug).split('?')[0].split('#')[0].replace(/\.html$/i, "").trim();
+    const siteUrl = typeof window !== 'undefined' ? (window.location.hostname.includes('rooh') ? 'https://roohpro.com' : window.location.origin) : 'https://roohpro.com';
+    const rawSlug = app.cleanSlug || app.slug || app.appCode || (/^\d{5}$/.test(app.id) ? app.id : app.packageId || app.id);
+    let cleanSlug = String(rawSlug).split('?')[0].split('#')[0].replace(/\.html$/i, "").replace(/-review$/i, "").trim();
+    if (cleanSlug.startsWith("app/")) cleanSlug = cleanSlug.replace(/^app\//, "");
     
-    // Construct dynamic clean flat share link (e.g. https://roohme.web.app/wats)
-    const dynamicLink = `${siteUrl}/${cleanSlug}`;
+    // Construct dynamic clean share link (e.g. https://roohpro.com/app/wats)
+    const dynamicLink = `${siteUrl}/app/${cleanSlug}`;
 
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {

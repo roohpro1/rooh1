@@ -2,6 +2,7 @@ name = "discover-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
 main = "worker.js"
 compatibility_date = "2024-09-01"
+assets = { directory = "./dist" }
 
 # D1 Database Binding
 [[d1_databases]]

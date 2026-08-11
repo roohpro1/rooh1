@@ -1449,7 +1449,7 @@ export default function App() {
         setCurrentView("admin");
       } else if (pathname === "/privacy" || hash === "#/privacy") {
         setCurrentView("privacy");
-      } else if (pathname === "/") {
+      } else if (pathname === "/" || pathname === "/app" || pathname === "/app/") {
         setCurrentView("home");
         setSelectedAppId(null);
       }
@@ -1474,8 +1474,9 @@ export default function App() {
       const targetApp = appsList.find((a) => isMatchApp(a, id) || isMatchApp(a, cleanKey));
 
       const actualId = targetApp ? targetApp.id : id;
-      const slugToUse = targetApp ? getAppSlug(targetApp) : (id.includes(".") ? getAppSlug({ id, name: id }) : id);
-      const targetUrl = `/${slugToUse}`;
+      const rawSlug = targetApp ? getAppSlug(targetApp) : (id.includes(".") ? getAppSlug({ id, name: id }) : id);
+      const cleanSlug = toShortCleanSlug(rawSlug);
+      const targetUrl = `/app/${cleanSlug}`;
 
       setSelectedAppId(actualId);
       setCurrentView("app");
@@ -1500,8 +1501,8 @@ export default function App() {
     } else {
       setCurrentView("home");
       setSelectedAppId(null);
-      if (window.location.pathname !== "/") {
-        window.history.pushState({}, "", "/");
+      if (window.location.pathname !== "/app" && window.location.pathname !== "/") {
+        window.history.pushState({}, "", "/app");
       }
     }
 

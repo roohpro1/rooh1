@@ -95,15 +95,18 @@ function generateSitemapFromApprovedApps(outputPath, publicPath) {
   const today = new Date().toISOString().split('T')[0];
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
-  xml += `  <url>\n    <loc>${siteUrl}/</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+  xml += `  <url>\n    <loc>${siteUrl}/app</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
   xml += `  <url>\n    <loc>${siteUrl}/privacy</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.3</priority>\n  </url>\n`;
 
   const addedSlugs = new Set();
   for (const item of apps) {
-    const rawSlug = item.cleanSlug || item.slug || item.id;
+    let rawSlug = item.cleanSlug || item.slug || item.id;
     if (rawSlug) {
-      const clean = String(rawSlug).trim().replace(/^\//, '').replace(/\.html$/i, '');
-      if (clean && !addedSlugs.has(clean) && !['sitemap.xml', 'privacy', ''].includes(clean)) {
+      let clean = String(rawSlug).trim().replace(/^\//, '').replace(/\.html$/i, '');
+      if (clean.endsWith('-review')) {
+        clean = clean.replace(/-review$/i, '');
+      }
+      if (clean && !addedSlugs.has(clean) && !['sitemap.xml', 'privacy', 'app', ''].includes(clean)) {
         addedSlugs.add(clean);
         const lastmod = (item.lastmod || item.updatedAt || today).split('T')[0];
         xml += `  <url>\n    <loc>${siteUrl}/app/${clean}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;

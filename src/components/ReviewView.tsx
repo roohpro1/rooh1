@@ -18,9 +18,11 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
   siblingApps = []
 }) => {
   // Generate SEO dynamic variables
-  const slug = app.slug || app.id.replace(/\./g, "-") + "-review";
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://roohme.web.app";
-  const canonicalUrl = `${siteUrl}/review/${slug}`;
+  const cleanSlugPath = (app.cleanSlug || app.slug || app.id)
+    .replace(/^\/+|\.html$/gi, '')
+    .replace(/-review$/i, '');
+  const siteUrl = typeof window !== "undefined" ? (window.location.hostname.includes("rooh") ? "https://roohpro.com" : window.location.origin) : "https://roohpro.com";
+  const canonicalUrl = `${siteUrl}/app/${cleanSlugPath}`;
 
   const seoTitle = app.metaTitle || `${app.name} - مراجعة شاملة وتثبيت آمن | اكتشف تطبيق`;
   const seoDescription = app.metaDescription || (app.description ? app.description.slice(0, 155) : `احصل على مراجعة تفصيلية وشاملة لتطبيق ${app.name} مع روابط التنزيل المباشرة والآمنة 100%.`);
@@ -97,23 +99,22 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
   // Check approval status: published vs pending draft
   const isPublished = app.status === 'published' || app.status === undefined;
 
-  const cleanSlugPath = (app.slug || app.cleanSlug || app.id).replace(/^\/+|\.html$/gi, '');
   const pageTitle = `${app.name} | منصة روح`;
-  const ogImage = app.iconUrl || `https://roohme.web.app/assets/images/og-${cleanSlugPath}.jpg`;
-  const twitterImage = app.iconUrl || `https://roohme.web.app/assets/images/twitter-${cleanSlugPath}.jpg`;
+  const ogImage = app.iconUrl || `https://roohpro.com/assets/images/og-${cleanSlugPath}.jpg`;
+  const twitterImage = app.iconUrl || `https://roohpro.com/assets/images/twitter-${cleanSlugPath}.jpg`;
 
   const ldJsonData = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
     "name": `${app.name} | منصة روح`,
     "description": seoDescription,
-    "url": `https://roohme.web.app/${cleanSlugPath}`,
+    "url": canonicalUrl,
     "publisher": {
       "@type": "Organization",
       "name": "Rooh Platform",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://roohme.web.app/assets/images/logo.png"
+        "url": "https://roohpro.com/assets/images/logo.png"
       }
     }
   };
@@ -130,13 +131,13 @@ export const ReviewView: React.FC<ReviewViewProps> = ({
         <meta name="robots" content={isPublished ? "index, follow" : "noindex, nofollow"} />
 
         {/* وسم Canonical لمنع تكرار المحتوى */}
-        <link rel="canonical" href={`https://roohme.web.app/${cleanSlugPath}`} />
+        <link rel="canonical" href={canonicalUrl} />
 
         {/* وسوم Open Graph لمشاركة الروابط بفاعلية (WhatsApp, Facebook) */}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={seoDescription} />
-        <meta property="og:url" content={`https://roohme.web.app/${cleanSlugPath}`} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content={ogImage} />
         <meta property="og:site_name" content="Rooh Platform" />
 

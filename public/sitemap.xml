@@ -1,80 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://roohme.web.app/</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/privacy</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/privacy</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/reddit-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/messenger</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/linkedin-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/facebook</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/linkedin</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/discord-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/insta</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/messenger-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/reddit</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/x-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/telegram</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/telegram-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/x</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/tiktok-videos-music-live-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/discord</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://roohme.web.app/tiktok-lite-faster-tiktok-review</loc>
-    <lastmod>2026-08-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://roohme.web.app/facebook-review</loc>
-    <lastmod>2026-08-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://roohme.web.app/pinterest-review</loc>
-    <lastmod>2026-08-08</lastmod>
+    <loc>https://roohpro.com/app/tiktok</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
