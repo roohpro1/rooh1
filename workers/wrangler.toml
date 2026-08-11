@@ -1,7 +1,7 @@
 name = "discover-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
 main = "index.ts"
-compatibility_date = "2026-08-09"
+compatibility_date = "2024-09-01"
 
 # D1 Database Binding
 [[d1_databases]]
