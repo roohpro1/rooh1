@@ -1,0 +1,37 @@
+name = "rooh-pro"
+main = "worker.js"
+compatibility_date = "2026-08-11"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "h"
+database_name = "h"
+database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "h"
+database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
+
+# KV Namespace Binding
+[[kv_namespaces]]
+binding = "ROOH_KV"
+namespace_id = "6d9110610f2c45b09c15d3f2f5dee50a"
+
+# R2 Bucket Bindings
+[[r2_buckets]]
+binding = "roohme"
+bucket_name = "roohme"
+
+[[r2_buckets]]
+binding = "ROOH_R2"
+bucket_name = "roohme"
+
+[[r2_buckets]]
+binding = "rooh_reviews_bucket"
+bucket_name = "roohme"
+
+# Environment Variables
+[vars]
+SITE_BASE_URL = "https://roohpro.com"
+ADMIN_EMAIL = "roohpro1@gmail.com"
