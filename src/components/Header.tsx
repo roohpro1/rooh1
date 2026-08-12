@@ -137,26 +137,41 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Site Logo - clicking any part triggers secret access */}
-            <div 
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onLogoClick) onLogoClick();
-                else onNavigate("home");
-              }} 
-              className="flex cursor-pointer items-center gap-2 select-none animate-in fade-in slide-in-from-right-3 duration-300"
-              title="انقر 5 مرات للدخول السري"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-200 dark:shadow-blue-900/20 text-white font-bold text-lg active:scale-95 transition-transform">
-                <Award className="w-6 h-6" />
+            <div className="flex flex-col gap-1">
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onLogoClick) onLogoClick();
+                  else onNavigate("home");
+                }} 
+                className="flex cursor-pointer items-center gap-2 select-none animate-in fade-in slide-in-from-right-3 duration-300"
+                title="انقر 5 مرات للدخول السري"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-200 dark:shadow-blue-900/20 text-white font-bold text-lg active:scale-95 transition-transform">
+                  <Award className="w-6 h-6" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-black tracking-tight text-sm sm:text-base leading-none text-black dark:text-white">اكتشف تطبيقك</span>
+                  <span className="text-[10px] text-slate-800 dark:text-zinc-300 font-black leading-none mt-1">مراجعات وتحميل آمن</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="font-black tracking-tight text-sm sm:text-base leading-none text-black dark:text-white">اكتشف تطبيقك</span>
-                <span className="text-[10px] text-slate-800 dark:text-zinc-300 font-black leading-none mt-1">مراجعات وتحميل آمن</span>
-              </div>
+
+              {/* Subscribe button directly below logo */}
+              <button
+                onClick={() => {
+                  promptPwaInstall(() => setShowIosGuide(true));
+                  if (onSubscribeClick) onSubscribeClick();
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-xs cursor-pointer border border-red-400/40 w-fit active:scale-95 transition-all"
+                title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر وتصفحه كـ تطبيق مستقل"
+              >
+                <Bell className="w-3 h-3 text-white shrink-0 animate-pulse" />
+                <span>اشتراك وتنزيل التطبيق 📲</span>
+              </button>
             </div>
           </div>
 
-          {/* Left side: Compact Theme Switcher (Icon Only) & Language Switcher */}
+          {/* Left side: Compact Theme Switcher (Icon Only) & Sync Switcher */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             
             {/* 🌓 Direct Single Theme Switcher Button - ICON ONLY */}
@@ -189,22 +204,6 @@ export const Header: React.FC<HeaderProps> = ({
                   <Moon className="w-4 h-4 text-indigo-700 shrink-0" />
                 </div>
               )}
-            </button>
-
-            {/* Top Subscribe / Install App Button */}
-            <button
-              onClick={() => {
-                promptPwaInstall(() => setShowIosGuide(true));
-                if (onSubscribeClick) onSubscribeClick();
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-md bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-600 text-white border border-red-400/40"
-              title="اشتراك وتحميل التطبيق على الموبايل أو الكمبيوتر (Full Screen Standalone App)"
-              aria-label="اشتراك"
-            >
-              <Bell className="w-4 h-4 text-white shrink-0 animate-pulse" />
-              <span className="font-black text-[11px] sm:text-xs">
-                اشتراك
-              </span>
             </button>
 
             {/* Sync / Upload Changes Button */}
