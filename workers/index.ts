@@ -48,24 +48,31 @@ export default {
         return await sitemap.fetch(request, env, ctx);
       }
 
-      // 2b. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة)
+      // 2b. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة - مع حماية كاملة)
       if ((path === '/approved-apps.json' || path === '/api/approved-apps') && method === 'GET') {
-        let approvedData: string | null = null;
-        if (env.ROOH_KV) {
-          approvedData = await env.ROOH_KV.get('APPROVED_APPS_JSON');
-        }
-        if (!approvedData && env.R2_BUCKET) {
-          const file = await env.R2_BUCKET.get('approved-apps.json');
-          if (file) {
-            approvedData = await file.text();
+        try {
+          let approvedData: string | null = null;
+          if (env.ROOH_KV) {
+            approvedData = await env.ROOH_KV.get('APPROVED_APPS_JSON');
           }
-        }
-        return new Response(approvedData || '[]', {
-          headers: {
-            'Content-Type': 'application/json; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=300'
+          if (!approvedData && env.R2_BUCKET) {
+            const file = await env.R2_BUCKET.get('approved-apps.json');
+            if (file) {
+              approvedData = await file.text();
+            }
           }
-        });
+          return new Response(approvedData || '[]', {
+            headers: {
+              'Content-Type': 'application/json; charset=utf-8',
+              'Cache-Control': 'public, max-age=60, s-maxage=300'
+            }
+          });
+        } catch (e) {
+          // في حال حدوث أي خطأ، نرجع مصفوفة فارغة لضمان عدم انهيار المتصفح
+          return new Response('[]', { 
+            headers: { 'Content-Type': 'application/json; charset=utf-8' } 
+          });
+        }
       }
 
       if ((path === '/approved-apps.json' || path === '/api/approved-apps') && method === 'POST') {
