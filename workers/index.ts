@@ -4,10 +4,23 @@ import sitemap from './sitemap';
 import renderer from './renderer';
 
 /**
- * Unified Cloudflare Worker Entrypoint (Rooh Platform Architecture - Complete Version)
+ * Unified Cloudflare Worker Entrypoint (Rooh Platform Architecture - Fixed Version)
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    
+    // --- اللمسة السحرية: حاول تخدم الملفات الثابتة (js, css, images) أولاً ---
+    try {
+      // بنحاول نجيب الملف من الـ Assets (فولدر الـ dist)
+      const assetResponse = await env.ASSETS.fetch(request);
+      // لو الملف موجود فعلاً، رجعه للمتصفح فوراً بنوعه الصحيح
+      if (assetResponse.status === 200) {
+        return assetResponse;
+      }
+    } catch (e) {
+      // لو الملف مش موجود، كمل عادي للكود الخاص بك
+    }
+
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
