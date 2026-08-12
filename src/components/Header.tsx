@@ -39,6 +39,19 @@ export const Header: React.FC<HeaderProps> = ({
   const [showIosGuide, setShowIosGuide] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
+  const [hasSubscribed, setHasSubscribed] = useState(() => {
+    return typeof localStorage !== "undefined" && localStorage.getItem("user_subscribed") === "true";
+  });
+
+  const handleSubscribeAction = () => {
+    setHasSubscribed(true);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("user_subscribed", "true");
+    }
+    promptPwaInstall(() => setShowIosGuide(true));
+    if (onSubscribeClick) onSubscribeClick();
+  };
+
   // Check if mobile or desktop
   useEffect(() => {
     const checkDevice = () => {
@@ -137,37 +150,22 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Site Logo - clicking any part triggers secret access */}
-            <div className="flex flex-col gap-1">
-              <div 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onLogoClick) onLogoClick();
-                  else onNavigate("home");
-                }} 
-                className="flex cursor-pointer items-center gap-2 select-none animate-in fade-in slide-in-from-right-3 duration-300"
-                title="انقر 5 مرات للدخول السري"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-200 dark:shadow-blue-900/20 text-white font-bold text-lg active:scale-95 transition-transform">
-                  <Award className="w-6 h-6" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-black tracking-tight text-sm sm:text-base leading-none text-black dark:text-white">اكتشف تطبيقك</span>
-                  <span className="text-[10px] text-slate-800 dark:text-zinc-300 font-black leading-none mt-1">مراجعات وتحميل آمن</span>
-                </div>
+            <div 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onLogoClick) onLogoClick();
+                else onNavigate("home");
+              }} 
+              className="flex cursor-pointer items-center gap-2 select-none animate-in fade-in slide-in-from-right-3 duration-300"
+              title="انقر 5 مرات للدخول السري"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-200 dark:shadow-blue-900/20 text-white font-bold text-lg active:scale-95 transition-transform">
+                <Award className="w-6 h-6" />
               </div>
-
-              {/* Subscribe button directly below logo */}
-              <button
-                onClick={() => {
-                  promptPwaInstall(() => setShowIosGuide(true));
-                  if (onSubscribeClick) onSubscribeClick();
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-xs cursor-pointer border border-red-400/40 w-fit active:scale-95 transition-all"
-                title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر وتصفحه كـ تطبيق مستقل"
-              >
-                <Bell className="w-3 h-3 text-white shrink-0 animate-pulse" />
-                <span>اشتراك وتنزيل التطبيق 📲</span>
-              </button>
+              <div className="flex flex-col">
+                <span className="font-black tracking-tight text-sm sm:text-base leading-none text-black dark:text-white">اكتشف تطبيقك</span>
+                <span className="text-[10px] text-slate-800 dark:text-zinc-300 font-black leading-none mt-1">مراجعات وتحميل آمن</span>
+              </div>
             </div>
           </div>
 
@@ -234,12 +232,13 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             {currentView === "home" ? (
               <button
-                onClick={(e) => {
-                  promptPwaInstall(() => setShowIosGuide(true));
-                  if (onSubscribeClick) onSubscribeClick();
-                }}
+                onClick={handleSubscribeAction}
                 id="header-subscribe-btn"
-                className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer shrink-0 border border-red-400/40 animate-pulse"
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
+                  hasSubscribed
+                    ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/30 border-emerald-400/40"
+                    : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-red-600/30 border-red-400/40 animate-pulse"
+                }`}
                 title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر"
               >
                 <Bell className="w-4 h-4 shrink-0" />
@@ -257,12 +256,13 @@ export const Header: React.FC<HeaderProps> = ({
                   <span>الرئيسية</span>
                 </button>
                 <button
-                  onClick={(e) => {
-                    promptPwaInstall(() => setShowIosGuide(true));
-                    if (onSubscribeClick) onSubscribeClick();
-                  }}
+                  onClick={handleSubscribeAction}
                   id="header-page-subscribe-btn"
-                  className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer shrink-0 border border-red-400/40 animate-pulse"
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black text-white shadow-lg active:scale-95 transition-all cursor-pointer shrink-0 border ${
+                    hasSubscribed
+                      ? "bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-600/30 border-emerald-400/40"
+                      : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-red-600/30 border-red-400/40 animate-pulse"
+                  }`}
                   title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر"
                 >
                   <Bell className="w-4 h-4 shrink-0" />
