@@ -70,20 +70,39 @@ const AppLoaderComponent: React.FC<{
   onFetchSingle: (key: string) => Promise<void>;
   onLiveSearch: (query: string) => Promise<void>;
   onNavigateHome?: () => void;
-}> = ({ selectedKey, onFetchSingle, onLiveSearch }) => {
+}> = ({ selectedKey, onFetchSingle, onLiveSearch, onNavigateHome }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!selectedKey || selectedKey === "app" || selectedKey === "home") {
+      if (onNavigateHome) onNavigateHome();
+      setLoading(false);
+      return;
+    }
+
     let isMounted = true;
+    const timeoutTimer = setTimeout(() => {
+      if (isMounted) setLoading(false);
+    }, 2500);
+
     const loadApp = async () => {
       setLoading(true);
-      await onFetchSingle(selectedKey);
-      if (isMounted) {
-        setLoading(false);
+      try {
+        await onFetchSingle(selectedKey);
+      } catch (e) {
+        console.error("Single app fetch error:", e);
+      } finally {
+        clearTimeout(timeoutTimer);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     loadApp();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutTimer);
+    };
   }, [selectedKey]);
 
   if (loading) {
@@ -94,6 +113,14 @@ const AppLoaderComponent: React.FC<{
         </div>
         <p className="font-black text-slate-800 dark:text-white text-base">جاري تحضير وتجهيز المراجعة الرسمية للتطبيق... 🚀</p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">يتم التثبت من وجود التطبيق بروابط رسمية لمتاجر Google Play و App Store</p>
+        {onNavigateHome && (
+          <button
+            onClick={onNavigateHome}
+            className="mt-5 px-4 py-2 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-slate-200 text-xs font-black rounded-xl transition-all cursor-pointer"
+          >
+            إلغاء والمتابعة للصفحة الرئيسية 🏠
+          </button>
+        )}
       </div>
     );
   }
@@ -109,6 +136,14 @@ const AppLoaderComponent: React.FC<{
         >
           البحث والتحضير الفوري للتطبيق 🔍
         </button>
+        {onNavigateHome && (
+          <button 
+            onClick={onNavigateHome} 
+            className="px-5 py-2.5 bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white text-xs font-black rounded-xl hover:bg-slate-300 dark:hover:bg-zinc-700 transition-colors shadow-sm cursor-pointer"
+          >
+            الرئيسية 🏠
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1416,6 +1451,24 @@ export default function App() {
       const pathname = window.location.pathname;
 
       const isStaticAsset = /\.(png|jpg|jpeg|gif|svg|ico|css|js|json|xml|txt)$/i.test(pathname);
+      const cleanPath = pathname.replace(/\/+$/, "");
+
+      // Check home route first
+      if (pathname === "/" || pathname === "" || cleanPath === "/app" || cleanPath === "" || cleanPath === "/index.html") {
+        setCurrentView("home");
+        setSelectedAppId(null);
+        return;
+      }
+
+      if (pathname === "/admin" || cleanPath === "/admin" || hash === "#/admin") {
+        setCurrentView("admin");
+        return;
+      }
+
+      if (pathname === "/privacy" || cleanPath === "/privacy" || hash === "#/privacy") {
+        setCurrentView("privacy");
+        return;
+      }
 
       let reviewSlugOrId = "";
       if (pathname.startsWith("/review/")) {
@@ -1426,15 +1479,23 @@ export default function App() {
         reviewSlugOrId = decodeURIComponent(hash.replace("#/review/", ""));
       } else if (hash.startsWith("#/app/")) {
         reviewSlugOrId = decodeURIComponent(hash.replace("#/app/", ""));
-      } else if (pathname !== "/" && pathname !== "/admin" && pathname !== "/privacy" && pathname !== "/sitemap.xml" && !isStaticAsset) {
-        // Direct clean flat URL e.g. /wats or /facebook or /10001 or /com.facebook.katana
+      } else if (
+        pathname !== "/" &&
+        pathname !== "/admin" &&
+        pathname !== "/privacy" &&
+        pathname !== "/sitemap.xml" &&
+        cleanPath !== "/app" &&
+        !isStaticAsset
+      ) {
         reviewSlugOrId = decodeURIComponent(pathname.replace(/^\/+/, ""));
       } else if (hash && hash !== "#/" && hash !== "#/admin" && hash !== "#/privacy") {
         reviewSlugOrId = decodeURIComponent(hash.replace(/^#\/+/, ""));
       }
 
-      if (reviewSlugOrId) {
-        const cleanKey = reviewSlugOrId.trim().toLowerCase();
+      reviewSlugOrId = reviewSlugOrId.trim().replace(/\/+$/, "");
+
+      if (reviewSlugOrId && reviewSlugOrId.toLowerCase() !== "app" && reviewSlugOrId.toLowerCase() !== "home") {
+        const cleanKey = reviewSlugOrId.toLowerCase();
         const targetApp = appsList.find((a) => isMatchApp(a, cleanKey));
 
         if (targetApp) {
@@ -1445,11 +1506,7 @@ export default function App() {
           setCurrentView("app");
           fetchSingleAppFromFirestore(cleanKey);
         }
-      } else if (pathname === "/admin" || hash === "#/admin") {
-        setCurrentView("admin");
-      } else if (pathname === "/privacy" || hash === "#/privacy") {
-        setCurrentView("privacy");
-      } else if (pathname === "/" || pathname === "/app" || pathname === "/app/") {
+      } else {
         setCurrentView("home");
         setSelectedAppId(null);
       }
