@@ -1,34 +1,40 @@
+# Project Metadata
 name = "discover-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
 main = "src/workers/index.ts"
 compatibility_date = "2024-09-01"
+assets = { directory = "./dist" }
 
-# روابط الخدمات اللي ربطتها في كلاود فلير
-# تنبيه: تأكد من تغيير "rooh1-service-name" بأسماء الخدمات الحقيقية الموجودة في حسابك
+# --- روابط الخدمات (Routing Services) ---
 [[services]]
 binding = "rooh1"
-service = "rooh1-service-name" 
+service = "rooh1-service-name"
 
 [[services]]
 binding = "pro"
-service = "pro-service-name"   
+service = "pro-service-name"
 
 [[services]]
 binding = "topapp"
-service = "topapp-service-name" 
+service = "topapp-service-name"
 
-# قواعد البيانات (D1)
+# --- قواعد البيانات (D1 Database Bindings) ---
 [[d1_databases]]
 binding = "h"
 database_name = "h"
 database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
 
-# التخزين (KV)
+[[d1_databases]]
+binding = "DB"
+database_name = "h"
+database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
+
+# --- التخزين (KV Namespace Binding) ---
 [[kv_namespaces]]
 binding = "ROOH_KV"
 id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
-# التخزين (R2)
+# --- التخزين (R2 Bucket Bindings) ---
 [[r2_buckets]]
 binding = "roohme"
 bucket_name = "roohme"
@@ -41,7 +47,31 @@ bucket_name = "roohme"
 binding = "R2_BUCKET"
 bucket_name = "roohme"
 
+[[r2_buckets]]
+binding = "rooh_reviews_bucket"
+bucket_name = "roohme"
+
+# --- متغيرات البيئة (Environment Variables) ---
 [vars]
-SITE_URL = "https://roohpro.com"
-SITE_BASE_URL = "https://roohpro.com"
+# قم بتعديل هذه الروابط لتناسب الدومين الفرعي الحالي
+SITE_URL = "https://subdomain.roohpro.com"  # استبدل بالرابط الصحيح
+SITE_BASE_URL = "https://subdomain.roohpro.com" # استبدل بالرابط الصحيح
+ADMIN_EMAIL = "rooh10dodo@gmail.com"
+ADMIN_PASSWORD = "5030775"
 FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
+
+# --- إعدادات المراقبة (Observability) ---
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
