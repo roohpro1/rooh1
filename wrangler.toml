@@ -4,6 +4,20 @@ main = "workers/index.ts"
 compatibility_date = "2024-09-01"
 assets = { directory = "./dist" }
 
+# --- روابط الخدمات (Services) ---
+# ربطناهم كلهم بالـ Service الحقيقية اللي اسمها rowork
+[[services]]
+binding = "rooh1"
+service = "rowork"
+
+[[services]]
+binding = "roohmepro"
+service = "rowork"
+
+[[services]]
+binding = "topapp"
+service = "rowork"
+
 # --- قواعد البيانات (D1) ---
 [[d1_databases]]
 binding = "h"
@@ -39,8 +53,8 @@ bucket_name = "roohme"
 
 # --- المتغيرات ---
 [vars]
-SITE_URL = "https://roohpro.com"
-SITE_BASE_URL = "https://roohpro.com"
+SITE_URL = "https://roohpro.com/app"
+SITE_BASE_URL = "https://roohpro.com/app"
 ADMIN_EMAIL = "rooh10dodo@gmail.com"
 ADMIN_PASSWORD = "5030775"
 FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
