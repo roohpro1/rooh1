@@ -9,21 +9,28 @@ import renderer from './renderer';
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     
-    // --- اللمسة السحرية: حاول تخدم الملفات الثابتة (js, css, images) أولاً ---
-    try {
-      // بنحاول نجيب الملف من الـ Assets (فولدر الـ dist)
-      const assetResponse = await env.ASSETS.fetch(request);
-      // لو الملف موجود فعلاً، رجعه للمتصفح فوراً بنوعه الصحيح
-      if (assetResponse.status === 200) {
-        return assetResponse;
-      }
-    } catch (e) {
-      // لو الملف مش موجود، كمل عادي للكود الخاص بك
-    }
-
+    // --- اللمسة السحرية: حاول تخدم الملفات الثابتة (js, css, images) والمسارات الرئيسية أولاً ---
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+
+    try {
+      let assetRequest = request;
+      if (path === '/app' || path === '/app/') {
+        assetRequest = new Request(new URL('/index.html', request.url), request);
+      } else if (path.startsWith('/app/assets/')) {
+        const rewrittenPath = path.replace('/app/assets/', '/assets/');
+        assetRequest = new Request(new URL(rewrittenPath, request.url), request);
+      }
+
+      // بنحاول نجيب الملف من الـ Assets (فولدر الـ dist)
+      const assetResponse = await env.ASSETS.fetch(assetRequest);
+      if (assetResponse.status === 200 || assetResponse.status === 304) {
+        return assetResponse;
+      }
+    } catch (e) {
+      // لو حصل استثناء، بنكمل
+    }
 
     try {
       // 0. Dynamic Robots.txt Route
@@ -127,9 +134,15 @@ export default {
         });
       }
 
-      // 6. Clean Review Page Renderer Route (عرض صفحات المراجعات)
-      if (method === 'GET' && (path.startsWith('/review/') || (path !== '/' && !path.includes('.')))) {
-        return await renderer.fetch(request, env, ctx);
+      // 6. Reserved SPA routes vs Clean Review Page Renderer Route
+      if (method === 'GET') {
+        const cleanPath = path.replace(/\/+$/, "");
+        if (cleanPath === '/admin' || cleanPath === '/privacy' || cleanPath === '/app' || cleanPath === '') {
+          return await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+        }
+        if (path.startsWith('/review/') || (path !== '/' && !path.includes('.'))) {
+          return await renderer.fetch(request, env, ctx);
+        }
       }
 
       // Default Fallback
