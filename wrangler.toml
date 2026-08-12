@@ -1,8 +1,5 @@
 name = "roohpro-app"
-account_id = "fa73541af4fcdd947ab78c12fe990a34"
-main = "workers/index.ts"
 compatibility_date = "2024-09-01"
-assets = { directory = "./dist" }
 pages_build_output_dir = "./dist"
 
 # --- روابط الخدمات (Services) ---
