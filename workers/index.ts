@@ -3,6 +3,8 @@ import uploader from './uploader';
 import sitemap from './sitemap';
 import renderer from './renderer';
 
+const STATIC_ASSET_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp)$/i;
+
 /**
  * Unified Cloudflare Worker Entrypoint (Rooh Platform Architecture - Safe Version)
  */
@@ -11,29 +13,39 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+    const acceptHeader = request.headers.get('accept') || '';
 
     try {
-      // 0. SPA Routing for /app, /app/*, and root /
-      if (path === '/' || path === '/app' || path.startsWith('/app/')) {
+      // 1. Static Asset Handling with Path Rewriting & Strict 404 Guard
+      const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith('/app/assets/') || path.startsWith('/assets/');
+
+      if (isStaticAsset) {
         if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-          try {
-            const assetRes = await env.ASSETS.fetch(request);
+          // Try fetching as requested first
+          let assetRes = await env.ASSETS.fetch(request);
+          if (assetRes && assetRes.status !== 404) {
+            return assetRes;
+          }
+
+          // If request starts with /app/assets/, rewrite to /assets/ and retry
+          if (path.startsWith('/app/assets/')) {
+            const rewrittenPath = path.replace('/app/assets/', '/assets/');
+            const rewrittenReq = new Request(new URL(rewrittenPath, request.url), request);
+            assetRes = await env.ASSETS.fetch(rewrittenReq);
             if (assetRes && assetRes.status !== 404) {
               return assetRes;
             }
-            // SPA Fallback: serve /index.html for React Router
-            const indexReq = new Request(new URL('/index.html', request.url), request);
-            const indexRes = await env.ASSETS.fetch(indexReq);
-            if (indexRes && indexRes.status !== 404) {
-              return indexRes;
-            }
-          } catch (e) {
-            // Fallback if asset fetch fails
           }
         }
+
+        // CRITICAL: Never return index.html for missing static assets (JS, CSS, images)!
+        return new Response('Asset Not Found', { 
+          status: 404,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+        });
       }
 
-      // 1. Dynamic Robots.txt Route
+      // 2. Specific API and System Routes
       if ((path === '/robots.txt' || path === '/robots.txt/') && method === 'GET') {
         const txt = `User-agent: *\nAllow: /\n\nSitemap: https://roohpro.com/sitemap.xml\n`;
         return new Response(txt, {
@@ -45,21 +57,18 @@ export default {
         });
       }
 
-      // 2. Uploader API Route (رفع المحتوى)
       if (path === '/api/upload-review' && method === 'POST') {
         if (uploader && typeof uploader.fetch === 'function') {
           return await uploader.fetch(request, env, ctx);
         }
       }
 
-      // 3. Dynamic Sitemap Route (خريطة الموقع)
       if (path === '/sitemap.xml' && method === 'GET') {
         if (sitemap && typeof sitemap.fetch === 'function') {
           return await sitemap.fetch(request, env, ctx);
         }
       }
 
-      // 4. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة)
       if ((path === '/approved-apps.json' || path === '/api/approved-apps') && method === 'GET') {
         try {
           let approvedData: string | null = null;
@@ -103,7 +112,6 @@ export default {
         });
       }
 
-      // 5. مسار جلب الصفحات من R2
       if (path.startsWith("/api/page/") && method === 'GET') {
         const pageName = path.replace("/api/page/", "");
         const r2Bucket = env.ROOH_BUCKET || env.R2_BUCKET || env.ROOH_R2 || env.roohme;
@@ -122,7 +130,6 @@ export default {
         });
       }
 
-      // 6. مسار جلب المفاتيح من KV
       if (path === "/api/keys" && method === 'GET') {
         const keys = env.ROOH_KV ? await env.ROOH_KV.get("AI_KEYS_LIST") || "[]" : "[]";
         return new Response(keys, {
@@ -130,7 +137,6 @@ export default {
         });
       }
 
-      // 7. مسار حفظ المفاتيح في KV
       if (path === "/api/keys" && method === 'POST') {
         const body = await request.json();
         if (env.ROOH_KV) {
@@ -142,22 +148,26 @@ export default {
         });
       }
 
-      // 8. Dynamic App Review Renderer (STRICTLY for /review/*)
+      // 3. Dynamic App Review Renderer (STRICTLY for /review/*)
       if (method === 'GET' && path.startsWith('/review/')) {
         if (renderer && typeof renderer.fetch === 'function') {
           return await renderer.fetch(request, env, ctx);
         }
       }
 
-      // 9. Generic Asset Fallback for static assets or index.html
-      if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      // 4. SPA Navigation Routing for /app, /app/*, and / (ONLY for HTML / navigation requests)
+      const isHtmlNavRequest = acceptHeader.includes('text/html') || !path.includes('.');
+      if (isHtmlNavRequest && env.ASSETS && typeof env.ASSETS.fetch === 'function') {
         try {
           const assetRes = await env.ASSETS.fetch(request);
           if (assetRes && assetRes.status !== 404) {
             return assetRes;
           }
           const indexReq = new Request(new URL('/index.html', request.url), request);
-          return await env.ASSETS.fetch(indexReq);
+          const indexRes = await env.ASSETS.fetch(indexReq);
+          if (indexRes && indexRes.status !== 404) {
+            return indexRes;
+          }
         } catch (e) {
           // ignore
         }
