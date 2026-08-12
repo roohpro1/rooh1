@@ -24,6 +24,7 @@ import { popularAppsSeed } from "./data/appsSeed";
 import { callGeminiApi, callOpenAiApi, safeFetchJson, safeParseResponse, generateExhaustiveArticleFallback } from "./lib/fetchUtils";
 import { toShortCleanSlug } from "./lib/slugUtils";
 import { getGooglePlayLink } from "./lib/playSearchService";
+import { promptPwaInstall } from "./lib/pwaInstaller";
 
 export const getAppSlug = (app: { id?: string; name?: string; slug?: string; appCode?: string; packageId?: string }): string => {
   if (app.slug && app.slug.trim()) return toShortCleanSlug(app.slug);
@@ -1254,6 +1255,7 @@ export default function App() {
 
   const handleSubscribe = async (e?: React.FormEvent, customEmail?: string) => {
     if (e && e.preventDefault) e.preventDefault();
+    promptPwaInstall();
     setSubscribeError("");
     setSubscribeSuccess("");
     setIsSubscribing(true);

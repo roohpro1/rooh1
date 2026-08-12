@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home, UploadCloud, CheckCircle2, Download, Share2, PlusSquare, X } from "lucide-react";
+import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home, UploadCloud, CheckCircle2, Download, Share2, PlusSquare, X, Bell } from "lucide-react";
 import { AppReview } from "../types";
 import { promptPwaInstall, isStandaloneMode } from "../lib/pwaInstaller";
 
@@ -191,18 +191,19 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* PWA Install App Button replacing Language Switcher */}
+            {/* Top Subscribe / Install App Button */}
             <button
               onClick={() => {
                 promptPwaInstall(() => setShowIosGuide(true));
+                if (onSubscribeClick) onSubscribeClick();
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-md bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-600 text-white border border-red-400/40"
-              title="تثبيت منصة روح كـ تطبيق حقيقي على الموبايل (Full Screen)"
-              aria-label="تثبيت التطبيق"
+              title="اشتراك وتحميل التطبيق على الموبايل أو الكمبيوتر (Full Screen Standalone App)"
+              aria-label="اشتراك"
             >
-              <Smartphone className="w-4 h-4 text-white shrink-0 animate-pulse" />
+              <Bell className="w-4 h-4 text-white shrink-0 animate-pulse" />
               <span className="font-black text-[11px] sm:text-xs">
-                تثبيت التطبيق
+                اشتراك
               </span>
             </button>
 
@@ -231,27 +232,44 @@ export const Header: React.FC<HeaderProps> = ({
               - If on Home view: Show Subscribe button (اشتراك)
               - If on other views (app details, admin, privacy): Show Home button (الرئيسية)
           */}
-          <div className="flex items-center shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {currentView === "home" ? (
               <button
-                onClick={onSubscribeClick}
+                onClick={(e) => {
+                  promptPwaInstall(() => setShowIosGuide(true));
+                  if (onSubscribeClick) onSubscribeClick();
+                }}
                 id="header-subscribe-btn"
                 className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer shrink-0 border border-red-400/40 animate-pulse"
-                title="اشترك وفعل جرس التنبيهات مجاناً"
+                title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر"
               >
-                <Smartphone className="w-4 h-4 shrink-0" />
+                <Bell className="w-4 h-4 shrink-0" />
                 <span>اشتراك</span>
               </button>
             ) : (
-              <button
-                onClick={() => onNavigate("home")}
-                id="header-home-btn"
-                className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-black bg-yellow-400 hover:bg-yellow-300 text-slate-950 shadow-md shadow-yellow-400/30 border border-yellow-300 active:scale-95 transition-all cursor-pointer shrink-0"
-                title="العودة إلى الصفحة الرئيسية"
-              >
-                <Home className="w-4 h-4 shrink-0" />
-                <span>الرئيسية</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onNavigate("home")}
+                  id="header-home-btn"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black bg-yellow-400 hover:bg-yellow-300 text-slate-950 shadow-md shadow-yellow-400/30 border border-yellow-300 active:scale-95 transition-all cursor-pointer shrink-0"
+                  title="العودة إلى الصفحة الرئيسية"
+                >
+                  <Home className="w-4 h-4 shrink-0" />
+                  <span>الرئيسية</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    promptPwaInstall(() => setShowIosGuide(true));
+                    if (onSubscribeClick) onSubscribeClick();
+                  }}
+                  id="header-page-subscribe-btn"
+                  className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black text-white bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 shadow-lg shadow-red-600/30 active:scale-95 transition-all cursor-pointer shrink-0 border border-red-400/40 animate-pulse"
+                  title="اشترك وتحميل التطبيق على الهاتف أو الكمبيوتر"
+                >
+                  <Bell className="w-4 h-4 shrink-0" />
+                  <span>اشتراك</span>
+                </button>
+              </div>
             )}
           </div>
 
