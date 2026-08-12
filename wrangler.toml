@@ -1,24 +1,10 @@
 name = "roohpro-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
-# هذا هو المسار الصحيح للملف بناءً على صورتك
 main = "workers/index.ts"
 compatibility_date = "2024-09-01"
 assets = { directory = "./dist" }
 
-# --- روابط الخدمات ---
-[[services]]
-binding = "rooh1"
-service = "rooh1-service-name"
-
-[[services]]
-binding = "pro"
-service = "pro-service-name"
-
-[[services]]
-binding = "topapp"
-service = "topapp-service-name"
-
-# --- قواعد البيانات ---
+# --- قواعد البيانات (D1) ---
 [[d1_databases]]
 binding = "h"
 database_name = "h"
