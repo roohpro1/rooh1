@@ -2,6 +2,7 @@ const CACHE_NAME = 'rooh-pwa-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
+  '/app-logo.png',
   '/icon-192x192.png',
   '/icon-512x512.png'
 ];

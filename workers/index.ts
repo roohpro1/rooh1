@@ -4,33 +4,26 @@ import sitemap from './sitemap';
 import renderer from './renderer';
 
 /**
- * Unified Cloudflare Worker Entrypoint (Rooh Platform Architecture - Fixed Version)
+ * Unified Cloudflare Worker Entrypoint (Rooh Platform Architecture - Safe Version)
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     
-    // --- اللمسة السحرية: حاول تخدم الملفات الثابتة (js, css, images) والمسارات الرئيسية أولاً ---
+    // 1. محاولة خدمة الملفات الثابتة (Assets) بحماية كاملة
+    if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+      try {
+        const assetResponse = await env.ASSETS.fetch(request);
+        if (assetResponse && assetResponse.status === 200) {
+          return assetResponse;
+        }
+      } catch (e) {
+        // إذا لم يوجد الملف، كمل لباقي الكود
+      }
+    }
+
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
-
-    try {
-      let assetRequest = request;
-      if (path === '/app' || path === '/app/') {
-        assetRequest = new Request(new URL('/index.html', request.url), request);
-      } else if (path.startsWith('/app/assets/')) {
-        const rewrittenPath = path.replace('/app/assets/', '/assets/');
-        assetRequest = new Request(new URL(rewrittenPath, request.url), request);
-      }
-
-      // بنحاول نجيب الملف من الـ Assets (فولدر الـ dist)
-      const assetResponse = await env.ASSETS.fetch(assetRequest);
-      if (assetResponse.status === 200 || assetResponse.status === 304) {
-        return assetResponse;
-      }
-    } catch (e) {
-      // لو حصل استثناء، بنكمل
-    }
 
     try {
       // 0. Dynamic Robots.txt Route
@@ -47,15 +40,19 @@ export default {
 
       // 1. Uploader API Route (رفع المحتوى)
       if (path === '/api/upload-review' && method === 'POST') {
-        return await uploader.fetch(request, env, ctx);
+        if (uploader && typeof uploader.fetch === 'function') {
+          return await uploader.fetch(request, env, ctx);
+        }
       }
 
       // 2. Dynamic Sitemap Route (خريطة الموقع)
       if (path === '/sitemap.xml' && method === 'GET') {
-        return await sitemap.fetch(request, env, ctx);
+        if (sitemap && typeof sitemap.fetch === 'function') {
+          return await sitemap.fetch(request, env, ctx);
+        }
       }
 
-      // 2b. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة - مع حماية كاملة)
+      // 2b. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة)
       if ((path === '/approved-apps.json' || path === '/api/approved-apps') && method === 'GET') {
         try {
           let approvedData: string | null = null;
@@ -75,7 +72,6 @@ export default {
             }
           });
         } catch (e) {
-          // في حال حدوث أي خطأ، نرجع مصفوفة فارغة لضمان عدم انهيار المتصفح
           return new Response('[]', { 
             headers: { 'Content-Type': 'application/json; charset=utf-8' } 
           });
@@ -98,49 +94,47 @@ export default {
         });
       }
 
-      // 3. مسار جلب الصفحات من R2 (يعمل بمعزل عن فايربيز)
+      // 3. مسار جلب الصفحات من R2
       if (path.startsWith("/api/page/") && method === 'GET') {
         const pageName = path.replace("/api/page/", "");
-        const file = await env.ROOH_BUCKET.get(`${pageName}.json`);
-        
-        if (!file) {
-          return new Response(JSON.stringify({ error: "Page not found in R2 storage" }), {
-            status: 404,
-            headers: { "Content-Type": "application/json" }
-          });
+        if (env.ROOH_BUCKET) {
+          const file = await env.ROOH_BUCKET.get(`${pageName}.json`);
+          if (file) {
+            const content = await file.text();
+            return new Response(content, {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
         }
-        
-        const content = await file.text();
-        return new Response(content, {
-          headers: { "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ error: "Page not found in R2 storage" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" }
         });
       }
 
-      // 4. مسار جلب المفاتيح من KV (لقراءة المفاتيح والتحكم بها)
+      // 4. مسار جلب المفاتيح من KV
       if (path === "/api/keys" && method === 'GET') {
-        const keys = await env.ROOH_KV.get("AI_KEYS_LIST") || "[]";
+        const keys = env.ROOH_KV ? await env.ROOH_KV.get("AI_KEYS_LIST") || "[]" : "[]";
         return new Response(keys, {
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      // 5. مسار حفظ أو تحديث المفاتيح في KV (من لوحة التحكم)
+      // 5. مسار حفظ المفاتيح في KV
       if (path === "/api/keys" && method === 'POST') {
         const body = await request.json();
-        await env.ROOH_KV.put("AI_KEYS_LIST", JSON.stringify(body));
+        if (env.ROOH_KV) {
+          await env.ROOH_KV.put("AI_KEYS_LIST", JSON.stringify(body));
+        }
         return new Response(JSON.stringify({ success: true, message: "Keys updated successfully in KV" }), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      // 6. Reserved SPA routes vs Clean Review Page Renderer Route
-      if (method === 'GET') {
-        const cleanPath = path.replace(/\/+$/, "");
-        if (cleanPath === '/admin' || cleanPath === '/privacy' || cleanPath === '/app' || cleanPath === '') {
-          return await env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
-        }
-        if (path.startsWith('/review/') || (path !== '/' && !path.includes('.'))) {
+      // 6. Clean Review Page Renderer Route
+      if (method === 'GET' && (path.startsWith('/review/') || (path !== '/' && !path.includes('.')))) {
+        if (renderer && typeof renderer.fetch === 'function') {
           return await renderer.fetch(request, env, ctx);
         }
       }
@@ -148,17 +142,16 @@ export default {
       // Default Fallback
       return new Response(JSON.stringify({ 
         status: 'Rooh Platform Cloudflare Worker active', 
-        message: 'All systems (KV, R2, Uploader, Sitemap, Renderer) are running successfully' 
+        message: 'All systems running successfully' 
       }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
 
     } catch (err: any) {
-      // معالجة عامة لأي خطأ طارئ لضمان عدم توقف الـ Worker
       return new Response(JSON.stringify({ 
         error: "Internal Worker Error", 
-        details: err.message 
+        details: err.message || "Unknown error"
       }), {
         status: 500,
         headers: { "Content-Type": "application/json" },

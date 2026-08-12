@@ -1549,19 +1549,19 @@ export default function App() {
       }
     } else if (view === "admin") {
       setCurrentView("admin");
-      if (window.location.pathname !== "/admin") {
-        window.history.pushState({}, "", "/admin");
+      if (window.location.pathname !== "/app/admin" && window.location.pathname !== "/admin") {
+        window.history.pushState({}, "", "/app/admin");
       }
     } else if (view === "privacy") {
       setCurrentView("privacy");
-      if (window.location.pathname !== "/privacy") {
-        window.history.pushState({}, "", "/privacy");
+      if (window.location.pathname !== "/app/privacy" && window.location.pathname !== "/privacy") {
+        window.history.pushState({}, "", "/app/privacy");
       }
     } else {
       setCurrentView("home");
       setSelectedAppId(null);
-      if (window.location.pathname !== "/app" && window.location.pathname !== "/") {
-        window.history.pushState({}, "", "/app");
+      if (window.location.pathname !== "/app" && window.location.pathname !== "/app/") {
+        window.history.pushState({}, "", "/app/");
       }
     }
 
@@ -2755,8 +2755,14 @@ export default function App() {
             {/* Copyright and Brand */}
             <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3 select-none">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white font-bold text-sm">
-                  <Award className="w-5 h-5" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+                  <img 
+                    src="https://pub-f26b492b3b434f52832df2e87ac4e617.r2.dev/app%20rooh%20pro.png" 
+                    onError={(e) => { e.currentTarget.src = "/app-logo.png"; }}
+                    alt="شعار منصة روح" 
+                    className="w-full h-full object-cover" 
+                    referrerPolicy="no-referrer" 
+                  />
                 </div>
                 <button onClick={() => handleNavigate("home")} className="font-black text-black dark:text-slate-300 text-sm hover:text-blue-600 transition-colors cursor-pointer">
                   اكتشف تطبيقك

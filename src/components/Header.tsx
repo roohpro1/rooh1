@@ -159,8 +159,14 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex cursor-pointer items-center gap-2 select-none animate-in fade-in slide-in-from-right-3 duration-300"
               title="انقر 5 مرات للدخول السري"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-md shadow-blue-200 dark:shadow-blue-900/20 text-white font-bold text-lg active:scale-95 transition-transform">
-                <Award className="w-6 h-6" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 shadow-md shadow-blue-200 dark:shadow-blue-900/20 active:scale-95 transition-transform shrink-0">
+                <img 
+                  src="https://pub-f26b492b3b434f52832df2e87ac4e617.r2.dev/app%20rooh%20pro.png" 
+                  onError={(e) => { e.currentTarget.src = "/app-logo.png"; }}
+                  alt="شعار منصة روح" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-black tracking-tight text-sm sm:text-base leading-none text-black dark:text-white">اكتشف تطبيقك</span>
@@ -410,8 +416,14 @@ export const Header: React.FC<HeaderProps> = ({
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shrink-0">
-                <Smartphone className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shadow-lg shrink-0">
+                <img 
+                  src="https://pub-f26b492b3b434f52832df2e87ac4e617.r2.dev/app%20rooh%20pro.png" 
+                  onError={(e) => { e.currentTarget.src = "/app-logo.png"; }}
+                  alt="شعار منصة روح" 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer" 
+                />
               </div>
               <div>
                 <h3 className="font-black text-base sm:text-lg text-white">تثبيت تطبيق منصة روح على الآيفون 📱</h3>
