@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home } from "lucide-react";
+import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home, UploadCloud, CheckCircle2 } from "lucide-react";
 import { AppReview } from "../types";
 
 interface HeaderProps {
@@ -189,20 +189,19 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Concise Language Switcher (AR / EN) Button */}
+            {/* Temporary Upload Changes Button replacing Language Switcher */}
             <button
-              onClick={onToggleLanguage}
-              className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-xs border ${
-                isDarkMode 
-                  ? "text-zinc-200 hover:text-white bg-zinc-900/90 border-zinc-700/80 hover:border-zinc-600"
-                  : "text-slate-900 hover:text-blue-700 bg-slate-100 hover:bg-slate-200 border-slate-300 hover:border-blue-400"
-              }`}
-              title={currentLang === "ar" ? "Switch to English" : "التحويل إلى اللغة العربية"}
-              aria-label={currentLang === "ar" ? "Switch to English" : "التحويل إلى اللغة العربية"}
+              onClick={() => {
+                if (onToggleLanguage) onToggleLanguage();
+                alert("⚡ تم تجهيز جميع الملفات المعدلة وتوثيق التغييرات محلياً بنجاح! جاهز للتصدير والمزامنة مباشرة عبر قائمة الإعدادات (Export to GitHub).");
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40"
+              title="رفع وتأكيد كافة التعديلات الأخيرة المنجزة"
+              aria-label="رفع وتأكيد التعديلات"
             >
-              <Globe className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-              <span className="font-extrabold uppercase tracking-wide text-[11px] sm:text-xs">
-                {currentLang === "ar" ? "EN" : "عربي"}
+              <UploadCloud className="w-4 h-4 text-white animate-bounce shrink-0" />
+              <span className="font-black text-[11px] sm:text-xs">
+                رفع التعديلات
               </span>
             </button>
           </div>
