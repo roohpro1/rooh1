@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home, UploadCloud, CheckCircle2 } from "lucide-react";
+import { Menu, Search, Smartphone, Award, Star, Sparkles, ChevronLeft, Globe, Sun, Moon, Home, UploadCloud, CheckCircle2, Download, Share2, PlusSquare, X } from "lucide-react";
 import { AppReview } from "../types";
+import { promptPwaInstall, isStandaloneMode } from "../lib/pwaInstaller";
 
 interface HeaderProps {
   onSearchChange: (query: string) => void;
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   // Check if mobile or desktop
@@ -189,20 +191,32 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Temporary Upload Changes Button replacing Language Switcher */}
+            {/* PWA Install App Button replacing Language Switcher */}
+            <button
+              onClick={() => {
+                promptPwaInstall(() => setShowIosGuide(true));
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-md bg-gradient-to-r from-red-600 via-rose-600 to-red-700 hover:from-red-500 hover:to-rose-600 text-white border border-red-400/40"
+              title="تثبيت منصة روح كـ تطبيق حقيقي على الموبايل (Full Screen)"
+              aria-label="تثبيت التطبيق"
+            >
+              <Smartphone className="w-4 h-4 text-white shrink-0 animate-pulse" />
+              <span className="font-black text-[11px] sm:text-xs">
+                تثبيت التطبيق
+              </span>
+            </button>
+
+            {/* Sync / Upload Changes Button */}
             <button
               onClick={() => {
                 if (onToggleLanguage) onToggleLanguage();
-                alert("⚡ تم تجهيز جميع الملفات المعدلة وتوثيق التغييرات محلياً بنجاح! جاهز للتصدير والمزامنة مباشرة عبر قائمة الإعدادات (Export to GitHub).");
+                alert("⚡ تم توثيق وحفظ جميع الملفات! جاهز للتصدير والمزامنة مباشرة عبر قائمة الإعدادات (Export to GitHub).");
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/40"
-              title="رفع وتأكيد كافة التعديلات الأخيرة المنجزة"
-              aria-label="رفع وتأكيد التعديلات"
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-black transition-all cursor-pointer focus:outline-none select-none active:scale-95 shrink-0 shadow-xs bg-emerald-700/20 hover:bg-emerald-700/30 text-emerald-300 border border-emerald-500/30"
+              title="رفع وتأكيد كافة التعديلات الأخيرة إلى GitHub"
             >
-              <UploadCloud className="w-4 h-4 text-white animate-bounce shrink-0" />
-              <span className="font-black text-[11px] sm:text-xs">
-                رفع التعديلات
-              </span>
+              <UploadCloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>مزامنة</span>
             </button>
           </div>
 
@@ -367,6 +381,51 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
+
+      {/* iOS Safari PWA Installation Guide Modal */}
+      {showIosGuide && (
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-3xl p-6 shadow-2xl text-right text-white">
+            <button
+              onClick={() => setShowIosGuide(false)}
+              className="absolute top-4 left-4 p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center shadow-lg shrink-0">
+                <Smartphone className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-black text-base sm:text-lg text-white">تثبيت تطبيق منصة روح على الآيفون 📱</h3>
+                <p className="text-xs text-slate-400">تطبيق حقيقي بدون شريط متصفح وبأيقونة على الشاشة الرئيسية</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 my-5 text-xs font-semibold leading-relaxed text-slate-200">
+              <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-800/80 border border-slate-700/60">
+                <span className="w-6 h-6 rounded-full bg-red-600 text-white font-black flex items-center justify-center text-xs shrink-0 mt-0.5">1</span>
+                <p>اضغط على زر المشاركة <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-700 text-blue-400 font-bold"><Share2 className="w-3.5 h-3.5 inline ml-1" /> مشاركة</span> في أسفل متصفح Safari.</p>
+              </div>
+              <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-800/80 border border-slate-700/60">
+                <span className="w-6 h-6 rounded-full bg-red-600 text-white font-black flex items-center justify-center text-xs shrink-0 mt-0.5">2</span>
+                <p>مرر للأسفل واختر <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-700 text-amber-400 font-bold"><PlusSquare className="w-3.5 h-3.5 inline ml-1" /> الإضافة إلى الشاشة الرئيسية</span>.</p>
+              </div>
+              <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-800/80 border border-slate-700/60">
+                <span className="w-6 h-6 rounded-full bg-red-600 text-white font-black flex items-center justify-center text-xs shrink-0 mt-0.5">3</span>
+                <p>اضغط على <span className="font-black text-emerald-400">"إضافة" (Add)</span> في أعلى اليمين، وسيعمل التطبيق فوراً بشاشة كاملة (Full Screen)! 🚀</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowIosGuide(false)}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs shadow-lg transition-all cursor-pointer"
+            >
+              فهمت ذلك، إغلاق الدليل 👍
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

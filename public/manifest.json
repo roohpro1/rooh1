@@ -1,0 +1,25 @@
+{
+  "name": "منصة روح - Rooh Platform",
+  "short_name": "منصة روح",
+  "description": "منصة روح - وجهتك الأولى لاستكشاف ومراجعة وتنزيل أحدث التطبيقات والألعاب الموثوقة بروابط آمنة 100%",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e293b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -3,7 +3,20 @@ import {createRoot} from 'react-dom/client';
 import {HelmetProvider} from 'react-helmet-async';
 import App from './App.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { initPwaInstaller } from './lib/pwaInstaller.ts';
 import './index.css';
+
+// Initialize PWA Installation Listener & ServiceWorker
+if (typeof window !== "undefined") {
+  initPwaInstaller();
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('[PWA] ServiceWorker registration note:', err);
+      });
+    });
+  }
+}
 
 // Guard against third-party cross-origin script errors (AdSense, Google CSE, tracking scripts)
 if (typeof window !== "undefined") {
