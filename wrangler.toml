@@ -1,9 +1,10 @@
 name = "discover-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
-main = "index.ts" 
+main = "src/workers/index.ts"
 compatibility_date = "2024-09-01"
 
 # روابط الخدمات اللي ربطتها في كلاود فلير
+# تنبيه: تأكد من تغيير "rooh1-service-name" بأسماء الخدمات الحقيقية الموجودة في حسابك
 [[services]]
 binding = "rooh1"
 service = "rooh1-service-name" 
