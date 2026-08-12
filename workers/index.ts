@@ -16,29 +16,57 @@ export default {
     const acceptHeader = request.headers.get('accept') || '';
 
     try {
-      // 1. Static Asset Handling with Path Rewriting & Strict 404 Guard
+      // 1. Static Asset Handling with Subpath Stripping & Strict 404 Guard
       const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith('/app/assets/') || path.startsWith('/assets/');
 
       if (isStaticAsset) {
         if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-          // Try fetching as requested first
-          let assetRes = await env.ASSETS.fetch(request);
-          if (assetRes && assetRes.status !== 404) {
-            return assetRes;
+          let assetRes: Response | null = null;
+
+          // If request starts with /app/assets/, strip /app prefix so env.ASSETS looks in dist/assets/...
+          if (path.startsWith('/app/assets/')) {
+            const strippedPath = path.replace(/^\/app/, '');
+            const strippedReq = new Request(new URL(strippedPath, request.url), request);
+            assetRes = await env.ASSETS.fetch(strippedReq);
           }
 
-          // If request starts with /app/assets/, rewrite to /assets/ and retry
-          if (path.startsWith('/app/assets/')) {
-            const rewrittenPath = path.replace('/app/assets/', '/assets/');
-            const rewrittenReq = new Request(new URL(rewrittenPath, request.url), request);
-            assetRes = await env.ASSETS.fetch(rewrittenReq);
-            if (assetRes && assetRes.status !== 404) {
-              return assetRes;
+          // Fallback / Direct fetch for /assets/... or original URL if not found yet
+          if (!assetRes || assetRes.status === 404) {
+            assetRes = await env.ASSETS.fetch(request);
+          }
+
+          // Fallback: If request started with /assets/ and failed, try adding /app
+          if ((!assetRes || assetRes.status === 404) && path.startsWith('/assets/')) {
+            const prefixedPath = '/app' + path;
+            const prefixedReq = new Request(new URL(prefixedPath, request.url), request);
+            assetRes = await env.ASSETS.fetch(prefixedReq);
+          }
+
+          if (assetRes && (assetRes.status === 200 || assetRes.status === 304)) {
+            // Ensure proper Content-Type header if missing or incorrect
+            if (path.endsWith('.js') || path.endsWith('.mjs')) {
+              const headers = new Headers(assetRes.headers);
+              headers.set('Content-Type', 'application/javascript; charset=utf-8');
+              return new Response(assetRes.body, {
+                status: assetRes.status,
+                statusText: assetRes.statusText,
+                headers
+              });
             }
+            if (path.endsWith('.css')) {
+              const headers = new Headers(assetRes.headers);
+              headers.set('Content-Type', 'text/css; charset=utf-8');
+              return new Response(assetRes.body, {
+                status: assetRes.status,
+                statusText: assetRes.statusText,
+                headers
+              });
+            }
+            return assetRes;
           }
         }
 
-        // CRITICAL: Never return index.html for missing static assets (JS, CSS, images)!
+        // CRITICAL: Never return index.html for missing static assets (JS, CSS, images, json)!
         return new Response('Asset Not Found', { 
           status: 404,
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
