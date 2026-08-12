@@ -8,25 +8,32 @@ import renderer from './renderer';
  */
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    
-    // 1. محاولة خدمة الملفات الثابتة (Assets) بحماية كاملة
-    if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
-      try {
-        const assetResponse = await env.ASSETS.fetch(request);
-        if (assetResponse && assetResponse.status === 200) {
-          return assetResponse;
-        }
-      } catch (e) {
-        // إذا لم يوجد الملف، كمل لباقي الكود
-      }
-    }
-
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
 
     try {
-      // 0. Dynamic Robots.txt Route
+      // 0. SPA Routing for /app, /app/*, and root /
+      if (path === '/' || path === '/app' || path.startsWith('/app/')) {
+        if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+          try {
+            const assetRes = await env.ASSETS.fetch(request);
+            if (assetRes && assetRes.status !== 404) {
+              return assetRes;
+            }
+            // SPA Fallback: serve /index.html for React Router
+            const indexReq = new Request(new URL('/index.html', request.url), request);
+            const indexRes = await env.ASSETS.fetch(indexReq);
+            if (indexRes && indexRes.status !== 404) {
+              return indexRes;
+            }
+          } catch (e) {
+            // Fallback if asset fetch fails
+          }
+        }
+      }
+
+      // 1. Dynamic Robots.txt Route
       if ((path === '/robots.txt' || path === '/robots.txt/') && method === 'GET') {
         const txt = `User-agent: *\nAllow: /\n\nSitemap: https://roohpro.com/sitemap.xml\n`;
         return new Response(txt, {
@@ -38,21 +45,21 @@ export default {
         });
       }
 
-      // 1. Uploader API Route (رفع المحتوى)
+      // 2. Uploader API Route (رفع المحتوى)
       if (path === '/api/upload-review' && method === 'POST') {
         if (uploader && typeof uploader.fetch === 'function') {
           return await uploader.fetch(request, env, ctx);
         }
       }
 
-      // 2. Dynamic Sitemap Route (خريطة الموقع)
+      // 3. Dynamic Sitemap Route (خريطة الموقع)
       if (path === '/sitemap.xml' && method === 'GET') {
         if (sitemap && typeof sitemap.fetch === 'function') {
           return await sitemap.fetch(request, env, ctx);
         }
       }
 
-      // 2b. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة)
+      // 4. Approved Apps Registry Endpoint (القائمة الثابتة المعتمدة)
       if ((path === '/approved-apps.json' || path === '/api/approved-apps') && method === 'GET') {
         try {
           let approvedData: string | null = null;
@@ -96,7 +103,7 @@ export default {
         });
       }
 
-      // 3. مسار جلب الصفحات من R2
+      // 5. مسار جلب الصفحات من R2
       if (path.startsWith("/api/page/") && method === 'GET') {
         const pageName = path.replace("/api/page/", "");
         const r2Bucket = env.ROOH_BUCKET || env.R2_BUCKET || env.ROOH_R2 || env.roohme;
@@ -115,7 +122,7 @@ export default {
         });
       }
 
-      // 4. مسار جلب المفاتيح من KV
+      // 6. مسار جلب المفاتيح من KV
       if (path === "/api/keys" && method === 'GET') {
         const keys = env.ROOH_KV ? await env.ROOH_KV.get("AI_KEYS_LIST") || "[]" : "[]";
         return new Response(keys, {
@@ -123,7 +130,7 @@ export default {
         });
       }
 
-      // 5. مسار حفظ المفاتيح في KV
+      // 7. مسار حفظ المفاتيح في KV
       if (path === "/api/keys" && method === 'POST') {
         const body = await request.json();
         if (env.ROOH_KV) {
@@ -135,10 +142,24 @@ export default {
         });
       }
 
-      // 6. Clean Review Page Renderer Route
-      if (method === 'GET' && (path.startsWith('/review/') || (path !== '/' && !path.includes('.')))) {
+      // 8. Dynamic App Review Renderer (STRICTLY for /review/*)
+      if (method === 'GET' && path.startsWith('/review/')) {
         if (renderer && typeof renderer.fetch === 'function') {
           return await renderer.fetch(request, env, ctx);
+        }
+      }
+
+      // 9. Generic Asset Fallback for static assets or index.html
+      if (env.ASSETS && typeof env.ASSETS.fetch === 'function') {
+        try {
+          const assetRes = await env.ASSETS.fetch(request);
+          if (assetRes && assetRes.status !== 404) {
+            return assetRes;
+          }
+          const indexReq = new Request(new URL('/index.html', request.url), request);
+          return await env.ASSETS.fetch(indexReq);
+        } catch (e) {
+          // ignore
         }
       }
 
