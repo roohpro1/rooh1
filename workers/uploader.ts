@@ -41,7 +41,15 @@ export default {
       const nowIso = new Date().toISOString();
 
       // 2. Upload Heavy Review Content to Cloudflare R2
-      await env.R2_BUCKET.put(r2Key, payload.reviewContentHtml, {
+      const r2Bucket = env.R2_BUCKET || env.ROOH_BUCKET || env.ROOH_R2 || env.roohme;
+      if (!r2Bucket) {
+        return new Response(JSON.stringify({ error: 'R2 bucket storage binding not found.' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      await r2Bucket.put(r2Key, payload.reviewContentHtml, {
         httpMetadata: {
           contentType: 'text/html; charset=utf-8',
           cacheControl: 'public, max-age=31536000, immutable',

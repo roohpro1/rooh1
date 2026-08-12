@@ -37,11 +37,12 @@ export default {
 
     try {
       // 2. Try fetching heavy HTML directly from R2 Bucket
+      const r2Bucket = env.R2_BUCKET || env.ROOH_BUCKET || env.ROOH_R2 || env.roohme;
       const r2Key = `reviews/${cleanSlug}.html`;
-      let object = await env.R2_BUCKET.get(r2Key);
+      let object = r2Bucket ? await r2Bucket.get(r2Key) : null;
 
       // Fallback: If not found by key convention, query Firestore REST API
-      if (!object) {
+      if (!object && r2Bucket) {
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/apps?key=${env.FIREBASE_API_KEY}&pageSize=1000`;
         const fsRes = await fetch(firestoreUrl);
         if (fsRes.ok) {
@@ -50,7 +51,7 @@ export default {
           const matchedDoc = docs.find((d: any) => d.fields?.slug?.stringValue === cleanSlug);
           if (matchedDoc && matchedDoc.fields?.r2Key?.stringValue) {
             const resolvedKey = matchedDoc.fields.r2Key.stringValue;
-            object = await env.R2_BUCKET.get(resolvedKey);
+            object = await r2Bucket.get(resolvedKey);
           }
         }
       }

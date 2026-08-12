@@ -1,10 +1,14 @@
 export interface Env {
   h?: D1Database;
+  DB?: D1Database;
   ROOH_KV?: KVNamespace;
   roohme?: R2Bucket;
   ROOH_R2?: R2Bucket;
   R2_BUCKET?: R2Bucket;
+  ROOH_BUCKET?: R2Bucket;
   REVIEWS_BUCKET?: R2Bucket;
+  rooh_reviews_bucket?: R2Bucket;
+  ASSETS?: { fetch: (request: Request) => Promise<Response> };
   FIREBASE_PROJECT_ID: string;
   FIREBASE_API_KEY?: string;
   SITE_URL?: string;

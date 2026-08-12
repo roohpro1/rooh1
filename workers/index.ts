@@ -59,8 +59,9 @@ export default {
           if (env.ROOH_KV) {
             approvedData = await env.ROOH_KV.get('APPROVED_APPS_JSON');
           }
-          if (!approvedData && env.R2_BUCKET) {
-            const file = await env.R2_BUCKET.get('approved-apps.json');
+          const r2Bucket = env.R2_BUCKET || env.ROOH_BUCKET || env.ROOH_R2 || env.roohme;
+          if (!approvedData && r2Bucket) {
+            const file = await r2Bucket.get('approved-apps.json');
             if (file) {
               approvedData = await file.text();
             }
@@ -83,8 +84,9 @@ export default {
         if (env.ROOH_KV) {
           await env.ROOH_KV.put('APPROVED_APPS_JSON', body);
         }
-        if (env.R2_BUCKET) {
-          await env.R2_BUCKET.put('approved-apps.json', body, {
+        const r2Bucket = env.R2_BUCKET || env.ROOH_BUCKET || env.ROOH_R2 || env.roohme;
+        if (r2Bucket) {
+          await r2Bucket.put('approved-apps.json', body, {
             httpMetadata: { contentType: 'application/json; charset=utf-8' }
           });
         }
@@ -97,8 +99,9 @@ export default {
       // 3. مسار جلب الصفحات من R2
       if (path.startsWith("/api/page/") && method === 'GET') {
         const pageName = path.replace("/api/page/", "");
-        if (env.ROOH_BUCKET) {
-          const file = await env.ROOH_BUCKET.get(`${pageName}.json`);
+        const r2Bucket = env.ROOH_BUCKET || env.R2_BUCKET || env.ROOH_R2 || env.roohme;
+        if (r2Bucket) {
+          const file = await r2Bucket.get(`${pageName}.json`);
           if (file) {
             const content = await file.text();
             return new Response(content, {
