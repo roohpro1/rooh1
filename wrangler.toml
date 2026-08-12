@@ -1,10 +1,11 @@
 name = "roohpro-app"
 account_id = "fa73541af4fcdd947ab78c12fe990a34"
-main = "src/workers/index.ts"
+# هذا هو المسار الصحيح للملف بناءً على صورتك
+main = "workers/index.ts"
 compatibility_date = "2024-09-01"
 assets = { directory = "./dist" }
 
-# --- روابط الخدمات (Routing Services) ---
+# --- روابط الخدمات ---
 [[services]]
 binding = "rooh1"
 service = "rooh1-service-name"
@@ -17,7 +18,7 @@ service = "pro-service-name"
 binding = "topapp"
 service = "topapp-service-name"
 
-# --- قواعد البيانات (D1 Database Bindings) ---
+# --- قواعد البيانات ---
 [[d1_databases]]
 binding = "h"
 database_name = "h"
@@ -28,12 +29,12 @@ binding = "DB"
 database_name = "h"
 database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
 
-# --- التخزين (KV Namespace Binding) ---
+# --- التخزين (KV) ---
 [[kv_namespaces]]
 binding = "ROOH_KV"
 id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
-# --- التخزين (R2 Bucket Bindings) ---
+# --- التخزين (R2) ---
 [[r2_buckets]]
 binding = "roohme"
 bucket_name = "roohme"
@@ -50,7 +51,7 @@ bucket_name = "roohme"
 binding = "rooh_reviews_bucket"
 bucket_name = "roohme"
 
-# --- متغيرات البيئة (Environment Variables) ---
+# --- المتغيرات ---
 [vars]
 SITE_URL = "https://roohpro.com"
 SITE_BASE_URL = "https://roohpro.com"
@@ -58,6 +59,6 @@ ADMIN_EMAIL = "rooh10dodo@gmail.com"
 ADMIN_PASSWORD = "5030775"
 FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
 
-# --- إعدادات المراقبة (Observability) ---
+# --- المراقبة ---
 [observability]
 enabled = true
