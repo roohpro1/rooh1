@@ -225,6 +225,18 @@ async function initD1Tables(d1: D1Database): Promise<void> {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `).run().catch(() => {});
+
+    await d1.prepare(`
+      CREATE TABLE IF NOT EXISTS archive_links (
+        id TEXT PRIMARY KEY,
+        url TEXT UNIQUE NOT NULL,
+        title TEXT,
+        keyword TEXT,
+        category TEXT,
+        source_portal TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `).run().catch(() => {});
   } catch (e) {
     console.warn("D1 tables init notice:", e);
   }
@@ -949,20 +961,41 @@ export async function handleUnifiedCloudflareRequest(
     // ========================================================================
     if ((path === "/api/archive/push" || path === "/api/admin/approve-app") && method === "POST") {
       const body = await request.json().catch(() => ({})) as any;
-      const appId = body.appId || body.id || body.slug || "";
-      const rawSlug = body.slug || appId;
-      const cleanSlug = toShortCleanSlug(rawSlug);
-      const appName = body.name || body.appName || cleanSlug;
+      const rawKeyword = body.keyword || body.slug || body.appId || body.id || "";
+      const cleanKeyword = toShortCleanSlug(rawKeyword);
+      const category = (body.category || "app").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+      const title = body.title || body.name || body.appName || cleanKeyword;
+      const sourcePortal = body.sourcePortal || "portal-1";
+      const appId = body.appId || body.id || cleanKeyword;
       const lastmod = new Date().toISOString();
 
-      // 1. Update D1 Status to 'published'
-      if (d1 && cleanSlug) {
+      // Form the unified SEO Canonical URL: https://roohpro.com/${category}/${keyword}
+      const finalUrl = `${siteBase}/${category}/${cleanKeyword}`;
+
+      // 1. Insert/Update into D1 archive_links table
+      if (d1) {
+        const linkId = `link-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         await d1.prepare(`
-          UPDATE apps SET status = 'published', lastmod = ? WHERE slug = ? OR app_id = ?
-        `).bind(lastmod, cleanSlug, appId).run().catch(() => {});
+          INSERT INTO archive_links (id, url, title, keyword, category, source_portal, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(url) DO UPDATE SET title = excluded.title, created_at = excluded.created_at
+        `).bind(linkId, finalUrl, title, cleanKeyword, category, sourcePortal, lastmod).run().catch(async () => {
+          // Fallback insert without conflict clause if table has standard schema
+          await d1.prepare(`
+            INSERT OR REPLACE INTO archive_links (id, url, title, keyword, category, source_portal, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(linkId, finalUrl, title, cleanKeyword, category, sourcePortal, lastmod).run().catch(() => {});
+        });
+
+        // 2. Update D1 apps table if cleanKeyword is present
+        if (cleanKeyword) {
+          await d1.prepare(`
+            UPDATE apps SET status = 'published', lastmod = ? WHERE slug = ? OR app_id = ?
+          `).bind(lastmod, cleanKeyword, appId).run().catch(() => {});
+        }
       }
 
-      // 2. Add or Update in approved-apps.json in KV & R2
+      // 3. Add or Update in approved-apps.json in KV & R2
       const kv = getKV(env);
       let list: any[] = [];
       if (kv) {
@@ -975,19 +1008,23 @@ export async function handleUnifiedCloudflareRequest(
       }
 
       const updatedRecord = {
-        id: appId || cleanSlug,
-        packageId: body.packageId || cleanSlug,
-        name: appName,
-        slug: cleanSlug,
-        cleanSlug: cleanSlug,
+        id: appId || cleanKeyword,
+        packageId: body.packageId || cleanKeyword,
+        name: title,
+        slug: cleanKeyword,
+        cleanSlug: cleanKeyword,
+        keyword: cleanKeyword,
+        category: category,
         status: "published",
         isApproved: true,
-        iconUrl: body.iconUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(appName)}&size=512&background=4f46e5&color=ffffff&bold=true`,
+        sourcePortal,
+        url: finalUrl,
+        iconUrl: body.iconUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&size=512&background=4f46e5&color=ffffff&bold=true`,
         lastmod,
         updatedAt: lastmod
       };
 
-      const newList = [updatedRecord, ...list.filter((a: any) => (a.slug || a.id || a.cleanSlug) !== cleanSlug)];
+      const newList = [updatedRecord, ...list.filter((a: any) => (a.slug || a.id || a.cleanSlug || a.keyword) !== cleanKeyword)];
       const jsonStr = JSON.stringify(newList);
 
       if (kv) await kv.put("APPROVED_APPS_JSON", jsonStr);
@@ -997,20 +1034,77 @@ export async function handleUnifiedCloudflareRequest(
         });
       }
 
-      // 3. Notify Master Gateway if available
+      // 4. Notify Master Gateway via Service Binding if available
       const gatewaySync = await syncWithMasterGateway(env, "/api/archive/push", "POST", {
-        appId,
-        slug: cleanSlug,
-        name: appName,
-        url: `https://roohpro.com/app/${cleanSlug}`
+        keyword: cleanKeyword,
+        category: category,
+        title: title,
+        sourcePortal: sourcePortal,
+        url: finalUrl,
+        appId: appId,
+        slug: cleanKeyword
       });
 
       return new Response(JSON.stringify({
         success: true,
-        message: "تم اعتماد المقال بنجاح وأرشفته في قاعدة البيانات وخريطة الموقع والملف المركزي.",
-        slug: cleanSlug,
-        publicUrl: `${siteBase}/app/${cleanSlug}`,
+        url: finalUrl,
+        keyword: cleanKeyword,
+        category: category,
+        title: title,
+        sourcePortal: sourcePortal,
+        message: "تمت الأرشفة بالنمط الموحد للدومين (https://roohpro.com/category/keyword)",
+        publicUrl: finalUrl,
         gatewaySync
+      }), {
+        status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders }
+      });
+    }
+
+    // ========================================================================
+    // 6c. Archive Links Registry Endpoint (/api/archive/list, /api/archive)
+    // ========================================================================
+    if ((path === "/api/archive/list" || path === "/api/archive") && method === "GET") {
+      let archiveLinks: any[] = [];
+      if (d1) {
+        try {
+          const res = await d1.prepare(`SELECT * FROM archive_links ORDER BY created_at DESC LIMIT 500`).all();
+          if (res && res.results) {
+            archiveLinks = res.results;
+          }
+        } catch (_) {}
+      }
+
+      // If D1 is empty or not bound, fallback to approved-apps.json
+      if (archiveLinks.length === 0) {
+        const kv = getKV(env);
+        let list: any[] = [];
+        if (kv) {
+          const kvVal = await kv.get("APPROVED_APPS_JSON");
+          if (kvVal) list = JSON.parse(kvVal);
+        }
+        if (list.length === 0 && bucket) {
+          const obj = await bucket.get("approved-apps.json");
+          if (obj) list = JSON.parse(await obj.text());
+        }
+        archiveLinks = list.map((item: any) => {
+          const cat = item.category || "app";
+          const key = item.keyword || item.cleanSlug || item.slug || item.id;
+          return {
+            id: item.id || key,
+            url: item.url || `${siteBase}/${cat}/${key}`,
+            title: item.name || item.title || key,
+            keyword: key,
+            category: cat,
+            source_portal: item.sourcePortal || "portal-1",
+            created_at: item.updatedAt || item.lastmod || new Date().toISOString()
+          };
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        count: archiveLinks.length,
+        links: archiveLinks
       }), {
         status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders }
       });

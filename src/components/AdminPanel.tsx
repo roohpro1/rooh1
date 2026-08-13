@@ -1648,12 +1648,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const targetApp = allApps.find(a => a.id === appId);
       const cleanSlug = (targetApp?.slug || targetApp?.cleanSlug || appId).replace(/^\/+|\.html$/gi, '').trim();
 
-      // Sync clean slug registration to approved-apps.json and Cloudflare R2 / KV
+      // Sync clean slug registration to approved-apps.json and Cloudflare R2 / KV / Master Gateway
       try {
         await fetch("/api/admin/approve-app", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ appId })
+          body: JSON.stringify({ 
+            keyword: cleanSlug,
+            category: (targetApp?.category || "app").trim(),
+            title: targetApp?.name || cleanSlug,
+            sourcePortal: "portal-1",
+            appId,
+            slug: cleanSlug,
+            packageId: targetApp?.packageId,
+            iconUrl: targetApp?.iconUrl
+          })
         });
       } catch (apiErr) {
         console.warn("Backend approve-app endpoint notice:", apiErr);

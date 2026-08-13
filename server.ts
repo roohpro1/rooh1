@@ -7662,6 +7662,85 @@ async function getIndexedAppPages(): Promise<Array<{ slug: string; lastmod?: str
   return pages;
 }
 
+// Master Gateway Unified Archive Push Endpoint
+app.post(['/api/archive/push', '/api/admin/approve-app'], async (req, res) => {
+  try {
+    const { keyword, category, title, sourcePortal, appId, slug, name } = req.body || {};
+    const rawKey = keyword || slug || appId || "";
+    const cleanKey = cleanSlugForSitemap(rawKey || "app");
+    const cleanCat = (category || "app").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+    const cleanTitle = title || name || cleanKey;
+    const portal = sourcePortal || "portal-1";
+    const siteUrl = process.env.SITE_URL || "https://roohpro.com";
+    
+    // Construct unified domain canonical URL: https://roohpro.com/${category}/${keyword}
+    const finalUrl = `${siteUrl}/${cleanCat}/${cleanKey}`;
+
+    // Update approved-apps.json on disk if present
+    try {
+      const approvedPath = path.join(process.cwd(), "public", "approved-apps.json");
+      let list: any[] = [];
+      if (fs.existsSync(approvedPath)) {
+        list = JSON.parse(fs.readFileSync(approvedPath, "utf-8"));
+      }
+      const updatedItem = {
+        id: appId || cleanKey,
+        name: cleanTitle,
+        slug: cleanKey,
+        cleanSlug: cleanKey,
+        keyword: cleanKey,
+        category: cleanCat,
+        sourcePortal: portal,
+        url: finalUrl,
+        isApproved: true,
+        status: "published",
+        updatedAt: new Date().toISOString()
+      };
+      const newList = [updatedItem, ...list.filter((a: any) => (a.slug || a.cleanSlug || a.keyword) !== cleanKey)];
+      fs.writeFileSync(approvedPath, JSON.stringify(newList, null, 2), "utf-8");
+    } catch (fsErr) {
+      console.warn("Local approved-apps.json update notice:", fsErr);
+    }
+
+    return res.json({
+      success: true,
+      url: finalUrl,
+      keyword: cleanKey,
+      category: cleanCat,
+      title: cleanTitle,
+      sourcePortal: portal,
+      message: "تمت الأرشفة بالنمط الموحد للدومين"
+    });
+  } catch (err: any) {
+    console.error("Archive push error:", err);
+    return res.status(500).json({ success: false, message: err?.message || "خطأ في استقبال الأرشفة" });
+  }
+});
+
+// Archive links registry list
+app.get(['/api/archive/list', '/api/archive'], (req, res) => {
+  try {
+    const list = getApprovedAppsList() || [];
+    const siteUrl = process.env.SITE_URL || "https://roohpro.com";
+    const mapped = list.map((item: any) => {
+      const cat = item.category || "app";
+      const key = item.keyword || item.cleanSlug || item.slug || item.id;
+      return {
+        id: item.id || key,
+        url: item.url || `${siteUrl}/${cat}/${key}`,
+        title: item.name || item.title || key,
+        keyword: key,
+        category: cat,
+        source_portal: item.sourcePortal || "portal-1",
+        created_at: item.updatedAt || new Date().toISOString()
+      };
+    });
+    return res.json({ success: true, count: mapped.length, links: mapped });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err?.message || "خطأ في جلب الأرشيف" });
+  }
+});
+
 // Start dev server middleware or serve production dist
 async function startServer() {
   // Dynamic robots.txt endpoint
