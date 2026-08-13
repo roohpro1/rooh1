@@ -9,9 +9,21 @@
     "/*.css",
     "/*.png",
     "/*.jpg",
+    "/*.jpeg",
+    "/*.gif",
     "/*.ico",
     "/*.svg",
     "/*.json",
-    "/favicon.ico"
+    "/*.woff",
+    "/*.woff2",
+    "/*.ttf",
+    "/*.map",
+    "/favicon.ico",
+    "/manifest.json",
+    "/robots.txt",
+    "/sitemap.xml",
+    "/sw.js",
+    "/app-logo.png",
+    "/apple-touch-icon.png"
   ]
 }
