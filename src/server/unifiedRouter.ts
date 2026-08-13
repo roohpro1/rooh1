@@ -671,6 +671,18 @@ export async function handleUnifiedCloudflareRequest(
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Static Assets pass-through via env.ASSETS
+  if (env.ASSETS && (path.includes("/assets/") || /\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|map)$/i.test(path))) {
+    let assetUrl = request.url;
+    if (path.startsWith('/app/assets/')) {
+      assetUrl = request.url.replace('/app/assets/', '/assets/');
+    }
+    const assetRes = await env.ASSETS.fetch(new Request(assetUrl, request));
+    if (assetRes && assetRes.status !== 404) {
+      return assetRes;
+    }
+  }
+
   try {
     // Auto init D1 tables if available
     if (d1 && (path.startsWith("/api/links") || path.startsWith("/l/") || path.startsWith("/app") || path === "/")) {
