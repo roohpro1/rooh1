@@ -26,4 +26,3 @@ export default defineConfig(() => {
     },
   };
 });
-المشكله الغريبه انه عندما
