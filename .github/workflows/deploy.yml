@@ -38,7 +38,7 @@ jobs:
       - name: Generate Dynamic Sitemap
         run: node generate-sitemap.js
 
-      - name: Ensure _redirects, _headers, and _routes.json in dist
+      - name: Ensure config files in dist
         run: |
           cp public/_redirects dist/_redirects || true
           cp public/_headers dist/_headers || true
