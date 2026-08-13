@@ -10,10 +10,14 @@ import {
   onAuthStateChanged,
   type User 
 } from "firebase/auth";
-import { initializeFirestore, doc, getDoc, setDoc, getDocFromServer } from "firebase/firestore";
+import { initializeFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getDatabase, ref as rtdbRef, set as rtdbSet, get as rtdbGet, onValue, update as rtdbUpdate, remove as rtdbRemove } from "firebase/database";
 import { getAnalytics, isSupported as isAnalyticsSupported, type Analytics } from "firebase/analytics";
 import firebaseConfig from "../../firebase-applet-config.json";
+
+// Environment detection
+const isCloudflare = typeof (globalThis as any).process === 'undefined' || !!(globalThis as any).env;
+const env = (globalThis as any).env || {};
 
 const effectiveFirebaseConfig = {
   ...firebaseConfig,
@@ -88,16 +92,24 @@ const dbId = firebaseConfig.firestoreDatabaseId &&
   ? firebaseConfig.firestoreDatabaseId
   : undefined;
 
-// Only initialize Firestore when a valid non-placeholder project ID exists
+// Initialize Firestore
 export const db = !isPlaceholderFirebase 
   ? initializeFirestore(app, { experimentalForceLongPolling: true }, dbId)
   : null as any;
 
 /**
- * Save lightweight settings/API keys to Firebase Firestore
- * Strictly used for tiny configs (<1KB), ensuring ZERO quota waste.
+ * Save lightweight settings/API keys to Firebase Firestore or Cloudflare KV
  */
 export async function saveLightweightConfig(configKey: string, data: Record<string, any>): Promise<boolean> {
+  if (isCloudflare && env.ROOH_KV) {
+    try {
+      await env.ROOH_KV.put(configKey, JSON.stringify(data));
+      return true;
+    } catch (e) {
+      console.warn("KV Save Notice:", e);
+    }
+  }
+
   if (isPlaceholderFirebase || !db) return false;
   try {
     const configDocRef = doc(db, "configs", configKey);
@@ -113,9 +125,18 @@ export async function saveLightweightConfig(configKey: string, data: Record<stri
 }
 
 /**
- * Get lightweight settings/API keys from Firebase Firestore
+ * Get lightweight settings/API keys from Firebase Firestore or Cloudflare KV
  */
 export async function getLightweightConfig<T = any>(configKey: string): Promise<T | null> {
+  if (isCloudflare && env.ROOH_KV) {
+    try {
+      const data = await env.ROOH_KV.get(configKey);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.warn("KV Get Notice:", e);
+    }
+  }
+
   if (isPlaceholderFirebase || !db) return null;
   try {
     const configDocRef = doc(db, "configs", configKey);
@@ -129,19 +150,16 @@ export async function getLightweightConfig<T = any>(configKey: string): Promise<
   return null;
 }
 
-// Initialize Firebase Realtime Database (قاعدة البيانات الخاصة بحفظ البيانات في الوقت اللحظي)
+// Initialize Firebase Realtime Database
 export const rtdb = !isPlaceholderFirebase && (firebaseConfig as any).databaseURL 
   ? getDatabase(app) 
   : null as any;
 
 /**
- * Cooperative Realtime Sync Engine (نظام المزامنة اللحظية المزدوج الاحترافي)
- * Keeps Cloud Firestore (فاير ستوري) and Firebase Realtime Database (قاعدة البيانات في الوقت اللحظي)
- * synchronized simultaneously in real-time.
+ * Cooperative Realtime Sync Engine
  */
 export async function syncToRealtimeDatabase(path: string, data: any): Promise<void> {
   if (isPlaceholderFirebase || !rtdb) {
-    // Fallback: sync to local storage instantly so local cache always matches in real-time
     try {
       if (typeof window !== "undefined" && data !== null && data !== undefined) {
         localStorage.setItem(`rtdb_sync_${path.replace(/\//g, '_')}`, JSON.stringify(data));
@@ -161,7 +179,7 @@ export async function syncToRealtimeDatabase(path: string, data: any): Promise<v
   }
 }
 
-// Test connection on boot to satisfy the firebase skill requirement
+// Test connection on boot
 async function testConnection() {
   if (isPlaceholderFirebase || !db) {
     console.log("Firebase initialized in standard seed configuration.");
