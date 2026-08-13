@@ -39,9 +39,9 @@ jobs:
       - name: Ensure _redirects in dist
         run: cp public/_redirects dist/_redirects || true
 
-      - name: Deploy Unified App to Cloudflare
+      - name: Deploy Unified App to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN || secrets.CF_API_TOKEN || secrets.CF_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
-          command: deploy
+          command: pages deploy dist --project-name=rooh1

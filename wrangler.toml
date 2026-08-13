@@ -1,4 +1,4 @@
-name = "roohpro-app"
+name = "rooh1"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
 
@@ -22,10 +22,6 @@ bucket_name = "roohme"
 
 [[r2_buckets]]
 binding = "roohme"
-bucket_name = "roohme"
-
-[[r2_buckets]]
-binding = "rooh_reviews_bucket"
 bucket_name = "roohme"
 
 [[r2_buckets]]

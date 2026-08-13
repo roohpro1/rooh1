@@ -74,14 +74,24 @@ export interface Env {
  * Get available R2 Bucket
  */
 function getBucket(env: Env): R2Bucket | null {
-  return env.roohme || env.ROOH_R2 || env.REVIEWS_BUCKET || env.ROOH_BUCKET || env.R2_BUCKET || null;
+  if (!env) return null;
+  return env.roohme || env.ROOH_R2 || env.REVIEWS_BUCKET || env.ROOH_BUCKET || env.R2_BUCKET || (env as any).BUCKET || null;
 }
 
 /**
  * Get available D1 Database
  */
 function getD1(env: Env): D1Database | null {
-  return env.h || env.DB || null;
+  if (!env) return null;
+  return env.h || env.DB || (env as any).D1 || (env as any).DATABASE || null;
+}
+
+/**
+ * Get available KV Namespace
+ */
+function getKV(env: Env): KVNamespace | null {
+  if (!env) return null;
+  return env.ROOH_KV || (env as any).KV || (env as any).ROOH_KV_NAMESPACE || null;
 }
 
 /**
@@ -460,9 +470,10 @@ async function uploadAndSyncReview(
 
   // 3. Register in approved-apps.json in KV & R2
   try {
+    const kv = getKV(env);
     let existingList: any[] = [];
-    if (env.ROOH_KV) {
-      const kvVal = await env.ROOH_KV.get("APPROVED_APPS_JSON");
+    if (kv) {
+      const kvVal = await kv.get("APPROVED_APPS_JSON");
       if (kvVal) existingList = JSON.parse(kvVal);
     }
 
@@ -486,8 +497,8 @@ async function uploadAndSyncReview(
     const updatedList = [newAppMeta, ...existingList.filter((a: any) => (a.slug || a.id || a.cleanSlug) !== cleanSlug)];
     const jsonStr = JSON.stringify(updatedList);
 
-    if (env.ROOH_KV) {
-      await env.ROOH_KV.put("APPROVED_APPS_JSON", jsonStr);
+    if (kv) {
+      await kv.put("APPROVED_APPS_JSON", jsonStr);
     }
     if (bucket) {
       await bucket.put("approved-apps.json", jsonStr, {
@@ -593,9 +604,10 @@ async function handleDynamicSitemap(env: Env, siteBase: string): Promise<Respons
   // 2. Query KV or R2 approved-apps.json
   if (publishedApps.length === 0) {
     try {
+      const kv = getKV(env);
       let list: any[] = [];
-      if (env.ROOH_KV) {
-        const kvVal = await env.ROOH_KV.get("APPROVED_APPS_JSON");
+      if (kv) {
+        const kvVal = await kv.get("APPROVED_APPS_JSON");
         if (kvVal) list = JSON.parse(kvVal);
       }
       if (list.length === 0 && bucket) {
@@ -843,10 +855,11 @@ export async function handleUnifiedCloudflareRequest(
     // 6. Approved Apps List Endpoint (/approved-apps.json, /api/approved-apps)
     // ========================================================================
     if (path === "/approved-apps.json" || path === "/api/approved-apps") {
+      const kv = getKV(env);
       if (method === "GET") {
         let apps: any[] = [];
-        if (env.ROOH_KV) {
-          const kvVal = await env.ROOH_KV.get("APPROVED_APPS_JSON");
+        if (kv) {
+          const kvVal = await kv.get("APPROVED_APPS_JSON");
           if (kvVal) apps = JSON.parse(kvVal);
         }
         if (apps.length === 0 && bucket) {
@@ -861,8 +874,8 @@ export async function handleUnifiedCloudflareRequest(
 
       if (method === "POST" || method === "PUT") {
         const bodyText = await request.text();
-        if (env.ROOH_KV) {
-          await env.ROOH_KV.put("APPROVED_APPS_JSON", bodyText);
+        if (kv) {
+          await kv.put("APPROVED_APPS_JSON", bodyText);
         }
         if (bucket) {
           await bucket.put("approved-apps.json", bodyText, {
