@@ -53,6 +53,7 @@ export const isMatchApp = (a: { id?: string; name?: string; slug?: string; appCo
 
   if (k.includes("facebook") && (aId.includes("facebook") || aName.includes("facebook"))) return true;
   if ((k === "wats" || k.includes("whatsapp")) && (aId.includes("whatsapp") || aName.includes("whatsapp"))) return true;
+  if (k.includes("messenger") && (aId.includes("orca") || aId.includes("messenger") || aName.includes("messenger") || aSlug.includes("messenger") || aCode.includes("messenger"))) return true;
   if (k.includes("chatgpt") && (aId.includes("chatgpt") || aName.includes("chatgpt"))) return true;
   if (k.includes("instagram") && (aId.includes("instagram") || aName.includes("instagram"))) return true;
   if (k.includes("tiktok") && (aId.includes("tiktok") || aName.includes("tiktok"))) return true;
@@ -82,9 +83,6 @@ const AppLoaderComponent: React.FC<{
     }
 
     let isMounted = true;
-    const timeoutTimer = setTimeout(() => {
-      if (isMounted) setLoading(false);
-    }, 2500);
 
     const loadApp = async () => {
       setLoading(true);
@@ -93,16 +91,16 @@ const AppLoaderComponent: React.FC<{
       } catch (e) {
         console.error("Single app fetch error:", e);
       } finally {
-        clearTimeout(timeoutTimer);
         if (isMounted) {
           setLoading(false);
         }
       }
     };
+
     loadApp();
+
     return () => {
       isMounted = false;
-      clearTimeout(timeoutTimer);
     };
   }, [selectedKey]);
 
@@ -112,7 +110,7 @@ const AppLoaderComponent: React.FC<{
         <div className="p-4 bg-blue-500/10 dark:bg-blue-500/20 rounded-2xl border border-blue-500/30 mb-4 animate-pulse">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
         </div>
-        <p className="font-black text-slate-800 dark:text-white text-base">جاري تحضير وتجهيز المراجعة الرسمية للتطبيق... 🚀</p>
+        <p className="font-black text-slate-800 dark:text-white text-base">جاري فتح وتجهيز الصفحة الرسمية للتطبيق... 🚀</p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">يتم التثبت من وجود التطبيق بروابط رسمية لمتاجر Google Play و App Store</p>
         {onNavigateHome && (
           <button
@@ -128,14 +126,18 @@ const AppLoaderComponent: React.FC<{
 
   return (
     <div className="flex flex-col items-center justify-center py-16 flex-1 my-6 text-center">
-      <ShieldAlert className="w-12 h-12 text-rose-500 mb-3" />
-      <p className="font-bold text-slate-800 dark:text-white">لم نتمكن من الوصول للتطبيق المطلوب تلقائياً</p>
-      <div className="flex items-center justify-center gap-3 mt-4">
+      <div className="p-4 bg-blue-500/10 dark:bg-blue-500/20 rounded-2xl border border-blue-500/30 mb-4">
+        <Search className="w-8 h-8 text-blue-600 mx-auto" />
+      </div>
+      <p className="font-bold text-slate-800 dark:text-white text-lg">جاري البحث عن التطبيق في المتاجر الرسمية</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4 max-w-md">يمكنك بدء التحضير الفوري واستعراض المرشحات المتاحة للتطبيق</p>
+      <div className="flex items-center justify-center gap-3">
         <button 
           onClick={() => onLiveSearch(selectedKey)} 
-          className="px-5 py-2.5 bg-amber-400 text-slate-950 text-xs font-black rounded-xl hover:bg-amber-300 transition-colors shadow-md cursor-pointer"
+          className="px-5 py-2.5 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-colors shadow-md cursor-pointer flex items-center gap-2"
         >
-          البحث والتحضير الفوري للتطبيق 🔍
+          <Search className="w-4 h-4" />
+          البحث الفوري واستعراض التطبيق
         </button>
         {onNavigateHome && (
           <button 
@@ -1376,7 +1378,14 @@ export default function App() {
     if (!key) return;
     const cleanKey = key.trim().toLowerCase();
 
-    // Check seed list first
+    // 1. Check if already present in appsList or seed list
+    const existingInState = appsList.find((a) => isMatchApp(a, cleanKey));
+    if (existingInState) {
+      setSelectedAppId(existingInState.id);
+      setCurrentView("app");
+      return;
+    }
+
     const seedMatch = popularAppsSeed.find((s) => isMatchApp(s, cleanKey));
     if (seedMatch) {
       const appObj: AppReview = {
@@ -1388,7 +1397,7 @@ export default function App() {
       } as AppReview;
 
       setAppsList((prev) => {
-        if (prev.some((a) => a.id === appObj.id)) return prev;
+        if (prev.some((a) => a.id === appObj.id || a.slug === appObj.slug)) return prev;
         return [appObj, ...prev];
       });
       setSelectedAppId(appObj.id);
@@ -1396,6 +1405,7 @@ export default function App() {
       return;
     }
 
+    // 2. Check approved-apps.json
     try {
       const res = await fetch("/approved-apps.json");
       if (res.ok) {
@@ -1404,7 +1414,9 @@ export default function App() {
           const match = approvedList.find((item: any) => {
             const rawSlug = item.cleanSlug || item.slug || item.id || "";
             const itemSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
-            return itemSlug === cleanKey || item.id === key || item.packageId === key;
+            const itemPkg = String(item.packageId || "").toLowerCase();
+            const itemName = String(item.name || "").toLowerCase();
+            return itemSlug === cleanKey || item.id === key || itemPkg === cleanKey || itemName === cleanKey || isMatchApp(item, cleanKey);
           });
 
           if (match) {
@@ -1427,16 +1439,114 @@ export default function App() {
             };
 
             setAppsList((prev) => {
-              if (prev.some((a) => a.id === appObj.id)) return prev;
+              if (prev.some((a) => a.id === appObj.id || a.slug === appObj.slug)) return prev;
               return [appObj, ...prev];
             });
             setSelectedAppId(appObj.id);
             setCurrentView("app");
+            return;
           }
         }
       }
     } catch (e) {
       console.warn("Notice: Cloudflare single app fetch error:", e);
+    }
+
+    // 3. Check Cloudflare R2 direct HTML (/app/${cleanKey}.html or /${cleanKey}.html)
+    try {
+      const r2Urls = [`/app/${cleanKey}.html`, `/${cleanKey}.html`, `https://roohpro.com/app/${cleanKey}.html`, `https://roohpro.com/${cleanKey}.html`];
+      for (const r2Url of r2Urls) {
+        try {
+          const htmlRes = await fetch(r2Url);
+          if (htmlRes.ok) {
+            const htmlText = await htmlRes.text();
+            if (htmlText && (htmlText.includes("<article") || htmlText.includes("store-btn") || htmlText.includes("<!DOCTYPE html>"))) {
+              const titleMatch = htmlText.match(/<title>(.*?)<\/title>/i) || htmlText.match(/<h1>(.*?)<\/h1>/i);
+              const extractedName = titleMatch 
+                ? titleMatch[1].replace(/- دليل ومراجعة.*/i, '').replace(/دليل ومراجعة شاملة لتطبيق /i, '').replace(/ \| منصة روح.*/i, '').trim() 
+                : cleanKey;
+              const playMatch = htmlText.match(/href="(https:\/\/play\.google\.com\/store\/apps\/details\?id=[^"]+)"/i);
+              const appStoreMatch = htmlText.match(/href="(https:\/\/apps\.apple\.com\/[^"]+)"/i);
+              const iconMatch = htmlText.match(/src="([^"]+)"\s+alt="[^"]*"\s+class="app-icon"/i) || htmlText.match(/class="app-icon"\s+src="([^"]+)"/i);
+
+              const appObj: AppReview = {
+                id: cleanKey,
+                appCode: cleanKey,
+                packageId: playMatch ? playMatch[1].split("id=")[1] : cleanKey,
+                name: extractedName,
+                iconUrl: iconMatch ? iconMatch[1] : `https://ui-avatars.com/api/?name=${encodeURIComponent(extractedName)}&size=512&background=4f46e5&color=ffffff&bold=true`,
+                rating: 4.8,
+                category: "تطبيقات",
+                description: htmlText,
+                content: htmlText,
+                playStoreUrl: playMatch ? playMatch[1] : `https://play.google.com/store/search?q=${encodeURIComponent(extractedName)}&c=apps`,
+                appStoreUrl: appStoreMatch ? appStoreMatch[1] : "",
+                tags: [extractedName, "تطبيقات"],
+                createdAt: new Date(),
+                isApproved: true,
+                status: "published",
+                slug: cleanKey
+              };
+
+              setAppsList((prev) => {
+                if (prev.some((a) => a.id === appObj.id || a.slug === appObj.slug)) return prev;
+                return [appObj, ...prev];
+              });
+              setSelectedAppId(appObj.id);
+              setCurrentView("app");
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+    } catch (r2Err) {
+      console.warn("R2 HTML direct check notice:", r2Err);
+    }
+
+    // 4. Check Firestore database directly if configured
+    if (!isPlaceholderFirebase && db) {
+      try {
+        const docRef = doc(db, "apps", key);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const d = docSnap.data();
+          const appObj: AppReview = {
+            id: docSnap.id,
+            ...d,
+            createdAt: d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || Date.now())
+          } as AppReview;
+          setAppsList((prev) => [appObj, ...prev.filter(a => a.id !== appObj.id)]);
+          setSelectedAppId(appObj.id);
+          setCurrentView("app");
+          return;
+        }
+
+        const qSlug = query(collection(db, "apps"), where("slug", "==", cleanKey), limit(1));
+        const slugSnap = await getDocs(qSlug);
+        if (!slugSnap.empty) {
+          const docSnap = slugSnap.docs[0];
+          const d = docSnap.data();
+          const appObj: AppReview = {
+            id: docSnap.id,
+            ...d,
+            createdAt: d.createdAt?.toDate ? d.createdAt.toDate() : new Date(d.createdAt || Date.now())
+          } as AppReview;
+          setAppsList((prev) => [appObj, ...prev.filter(a => a.id !== appObj.id)]);
+          setSelectedAppId(appObj.id);
+          setCurrentView("app");
+          return;
+        }
+      } catch (err) {
+        console.warn("Firestore fetch error for single app:", err);
+      }
+    }
+
+    // 5. Automatic Candidate Resolution & Search for Direct Links:
+    // If not found in any static cache, search the stores for this app name/slug and generate/display it directly!
+    try {
+      await handleStartSearchFlow(cleanKey);
+    } catch (autoErr) {
+      console.warn("Auto-resolution of app key failed:", autoErr);
     }
   };
 
