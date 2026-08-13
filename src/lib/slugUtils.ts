@@ -1,4 +1,4 @@
-// Helper utility for generating short, clean, direct English slugs (e.g. "whats", "facebook", "pubg")
+// Helper utility for generating short, clean, direct English slugs (e.g. "whats", "facebook", "pubg", "messenger")
 export function toShortCleanSlug(input: string): string {
   if (!input || !input.trim()) return "app";
 
@@ -7,6 +7,9 @@ export function toShortCleanSlug(input: string): string {
   // Strip query/hash and trailing .html or leading/trailing slashes
   str = str.split("?")[0].split("#")[0];
   str = str.replace(/\.html$/gi, "").replace(/^\/+|\/+$/g, "");
+
+  // Strip any "-review" or "_review" or "review" endings/starts
+  str = str.replace(/[-_]review$/gi, "").replace(/^review[-_]/gi, "");
 
   // Direct Arabic mappings
   if (str.includes("واتساب") || str.includes("واتس")) {
@@ -20,7 +23,11 @@ export function toShortCleanSlug(input: string): string {
     if (str.includes("لايت") || str.includes("lite")) return "facebooklite";
     return "facebook";
   }
-  if (str.includes("انستقرام") || str.includes("إنستغرام") || str.includes("انستجرام") || str.includes("انستا")) return "insta";
+  if (str.includes("ماسنجر") || str.includes("مسنجر")) {
+    if (str.includes("لايت") || str.includes("lite")) return "messengerlite";
+    return "messenger";
+  }
+  if (str.includes("انستقرام") || str.includes("إنستغرام") || str.includes("انستجرام") || str.includes("انستا") || str.includes("انستغرام")) return "insta";
   if (str.includes("تيليجرام") || str.includes("تليجرام") || str.includes("تلجرام")) return "telegram";
   if (str.includes("يوتيوب")) return "yt";
   if (str.includes("تيك توك") || str.includes("تيكتوك")) return "tiktok";
@@ -30,10 +37,14 @@ export function toShortCleanSlug(input: string): string {
   if (str.includes("كاب كات")) return "capcut";
   if (str.includes("نتفليكس")) return "netflix";
   if (str.includes("سبوتيفاي")) return "spotify";
+  if (str.includes("تويتر") || str.includes("منصة اكس") || str.includes("منصة x")) return "x";
+  if (str.includes("ديسكورد")) return "discord";
+  if (str.includes("لينكد") || str.includes("لينكد إن")) return "linkedin";
+  if (str.includes("ريديت")) return "reddit";
 
-  // Remove filler English words that make slugs long
+  // Remove filler English words that make slugs long (including review)
   str = str
-    .replace(/\b(review|messenger|official|edition|version|mobile|android|iphone|download|free|apk|mod|guide|pro|app|application|appstore|playstore|latest|update)\b/gi, " ")
+    .replace(/\b(review|reviews|official|edition|version|mobile|android|iphone|download|free|apk|mod|guide|pro|app|application|appstore|playstore|latest|update)\b/gi, " ")
     .replace(/[^a-z0-9]+/gi, " ")
     .trim();
 
@@ -46,6 +57,7 @@ export function toShortCleanSlug(input: string): string {
     return "whats";
   }
   if (str.includes("facebook")) return str.includes("lite") ? "facebooklite" : "facebook";
+  if (str.includes("messenger")) return str.includes("lite") ? "messengerlite" : "messenger";
   if (str.includes("instagram")) return "insta";
   if (str.includes("telegram")) return "telegram";
   if (str.includes("chatgpt")) return "chatgpt";
@@ -56,6 +68,10 @@ export function toShortCleanSlug(input: string): string {
   if (str.includes("netflix")) return "netflix";
   if (str.includes("spotify")) return "spotify";
   if (str.includes("capcut")) return "capcut";
+  if (str.includes("discord")) return "discord";
+  if (str.includes("linkedin")) return "linkedin";
+  if (str.includes("reddit")) return "reddit";
+  if (str.includes("twitter") || str === "x") return "x";
 
   // Split into words and pick at most 2 concise parts
   const parts = str.split(/\s+/).filter(Boolean);
@@ -64,8 +80,11 @@ export function toShortCleanSlug(input: string): string {
   let result = parts.length > 1 ? `${parts[0]}${parts[1]}` : parts[0];
   result = result.replace(/[^a-z0-9]/gi, "").toLowerCase();
 
-  if (result.length > 12) {
-    result = result.substring(0, 12);
+  // Strip review again if any residue remains
+  result = result.replace(/review$/gi, "");
+
+  if (result.length > 14) {
+    result = result.substring(0, 14);
   }
 
   return result || "app";
