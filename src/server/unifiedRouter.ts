@@ -674,12 +674,19 @@ export async function handleUnifiedCloudflareRequest(
   // Static Assets pass-through via env.ASSETS
   if (env.ASSETS && (path.includes("/assets/") || /\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|map)$/i.test(path))) {
     let assetUrl = request.url;
-    if (path.startsWith('/app/assets/')) {
-      assetUrl = request.url.replace('/app/assets/', '/assets/');
+    if (path.includes('/assets/')) {
+      assetUrl = request.url.substring(0, request.url.indexOf('/assets/')) + '/assets/' + path.split('/assets/')[1];
     }
     const assetRes = await env.ASSETS.fetch(new Request(assetUrl, request));
-    if (assetRes && assetRes.status !== 404) {
+    if (assetRes && assetRes.status < 400) {
       return assetRes;
+    }
+    if (/\.(js|css)$/i.test(path)) {
+      const isJs = /\.js$/i.test(path);
+      return new Response(`/* Asset not found: ${path} */`, {
+        status: 404,
+        headers: { "Content-Type": isJs ? "application/javascript; charset=utf-8" : "text/css; charset=utf-8", ...corsHeaders }
+      });
     }
   }
 
