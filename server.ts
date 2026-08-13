@@ -2174,6 +2174,13 @@ async function pullAndReviewApps(limit: number): Promise<{ successCount: number;
             .catch(err => console.warn("[Google Indexing API auto-trigger warning]", err));
         }
 
+        // Centralize registration in approved-apps.json & Archive Registry
+        try {
+          addAppToApprovedAppsJson(appData);
+        } catch (addErr) {
+          console.warn("[pullAndReviewApps] addAppToApprovedAppsJson notice:", addErr);
+        }
+
         return { id: shortId, name: metadata.name, success: true };
       } catch (err: any) {
         console.error(`Automatic pull failed for app package ${pkg}`, err);

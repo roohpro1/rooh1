@@ -67,6 +67,49 @@ export const isMatchApp = (a: { id?: string; name?: string; slug?: string; appCo
   return false;
 };
 
+export async function pushToMasterGatewayArchive(params: {
+  keyword: string;
+  category?: string;
+  title: string;
+  sourcePortal?: string;
+  appId?: string;
+  slug?: string;
+  packageId?: string;
+  iconUrl?: string;
+}) {
+  const cleanKeyword = toShortCleanSlug(params.keyword || params.slug || params.appId || "app");
+  const category = (params.category || "app").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+  const payload = {
+    keyword: cleanKeyword,
+    category: category,
+    title: params.title || cleanKeyword,
+    sourcePortal: params.sourcePortal || "portal-1",
+    appId: params.appId || cleanKeyword,
+    slug: cleanKeyword,
+    packageId: params.packageId || "",
+    iconUrl: params.iconUrl || "",
+    url: `https://roohpro.com/${category}/${cleanKeyword}`
+  };
+
+  const endpoints = ["/api/archive/push", "https://roohpro.com/api/archive/push"];
+  for (const endpoint of endpoints) {
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        console.log(`[Archive Bridge] ✅ Successfully pushed to archive: ${payload.url}`);
+        return true;
+      }
+    } catch (e) {
+      console.warn(`[Archive Bridge Notice] Push to ${endpoint} failed:`, e);
+    }
+  }
+  return false;
+}
+
 const AppLoaderComponent: React.FC<{
   selectedKey: string;
   onFetchSingle: (key: string) => Promise<void>;
@@ -937,6 +980,20 @@ export default function App() {
     if (backendSuccess && backendAppId) {
       clearInterval(interval);
       setScrapingStatus("تم إنشاء المراجعة بنجاح! ⚡ التطبيق الآن بانتظار موافقة المطور وسيتوفر بالرئيسية فور الاعتماد.");
+      
+      // Auto-push archive link to Master Gateway Central SEO Registry
+      const cleanSlugForArchive = toShortCleanSlug(selectedCandidate?.name || cleanQuery);
+      pushToMasterGatewayArchive({
+        keyword: cleanSlugForArchive,
+        category: selectedCandidate?.category || "app",
+        title: selectedCandidate?.name || cleanQuery,
+        appId: backendAppId,
+        slug: cleanSlugForArchive,
+        packageId: selectedCandidate?.packageId || "",
+        iconUrl: selectedCandidate?.iconUrl || "",
+        sourcePortal: "portal-1"
+      });
+
       await fetchAppReviews();
       setTimeout(() => {
         setIsScraping(false);
@@ -1163,6 +1220,18 @@ export default function App() {
       } catch (cfErr) {
         console.warn("Save review to Cloudflare worker notice:", cfErr);
       }
+
+      // Auto-push archive link to Master Gateway Central SEO Registry
+      pushToMasterGatewayArchive({
+        keyword: cleanSlug,
+        category: categoryStr || "app",
+        title: cleanAppName,
+        appId: newShortId,
+        slug: cleanSlug,
+        packageId: packageId,
+        iconUrl: iconUrl,
+        sourcePortal: "portal-1"
+      });
 
       setAppsList(prev => {
         if (prev.some(a => a.id === newShortId)) return prev;

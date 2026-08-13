@@ -1441,6 +1441,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         createdAt: serverTimestamp() // Set server time
       }, { merge: true });
 
+      // Sync clean slug registration to approved-apps.json and Cloudflare R2 / KV / Master Gateway
+      try {
+        await fetch("/api/admin/approve-app", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            keyword: cleanSlug,
+            category: (scrapedPreview.category || "app").trim(),
+            title: scrapedPreview.name || cleanSlug,
+            sourcePortal: "portal-1",
+            appId: appDocId,
+            slug: cleanSlug,
+            packageId: scrapedPreview.packageId || appDocId,
+            iconUrl: scrapedPreview.iconUrl
+          })
+        });
+      } catch (apiErr) {
+        console.warn("Backend approve-app endpoint notice in handlePublish:", apiErr);
+      }
+
       // Trigger instant Google Indexing API ping and GitHub Actions auto-deploy for site & sitemap
       try {
         await pingGoogleIndexingAPI(cleanSlug, appDocId);
