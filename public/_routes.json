@@ -7,17 +7,11 @@
     "/assets/*",
     "/*.js",
     "/*.css",
-    "/*.ico",
     "/*.png",
     "/*.jpg",
-    "/*.jpeg",
-    "/*.gif",
+    "/*.ico",
     "/*.svg",
     "/*.json",
-    "/*.woff",
-    "/*.woff2",
-    "/favicon.ico",
-    "/manifest.json",
-    "/robots.txt"
+    "/favicon.ico"
   ]
 }

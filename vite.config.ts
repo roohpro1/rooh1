@@ -14,7 +14,7 @@ export default defineConfig(() => {
     },
     build: {
       outDir: 'dist',
-      emptyOutDir: false,
+      emptyOutDir: true, // مهم جداً لمسح الملفات القديمة
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
