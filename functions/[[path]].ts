@@ -4,31 +4,33 @@ export async function onRequest(context: { request: Request; env: any; waitUntil
   const url = new URL(context.request.url);
   const pathname = url.pathname;
   
-  // Check if request is for a static asset file by extension or path
-  const isStaticAsset = pathname.includes('/assets/') || 
-    /\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml)$/i.test(pathname);
+  const isJsOrCss = /\.(js|css)$/i.test(pathname);
+  const isStaticAsset = isJsOrCss || pathname.includes('/assets/') || 
+    /\.(png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml)$/i.test(pathname);
 
   // Serve static assets directly via env.ASSETS if available
   if (context.env.ASSETS && isStaticAsset) {
     // 1. Try original request
     let assetRes = await context.env.ASSETS.fetch(context.request);
-    if (assetRes && assetRes.status < 400) {
+    let contentType = assetRes?.headers?.get("content-type") || "";
+
+    if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
       return assetRes;
     }
 
     // 2. Try URL rewritten to remove /app/ or any path prefix before /assets/
-    let cleanAssetPath = pathname;
-    if (cleanAssetPath.includes('/assets/')) {
-      cleanAssetPath = '/assets/' + cleanAssetPath.split('/assets/')[1];
+    if (pathname.includes('/assets/')) {
+      const cleanAssetPath = '/assets/' + pathname.split('/assets/')[1];
       const rewrittenUrl = new URL(cleanAssetPath, url.origin);
       assetRes = await context.env.ASSETS.fetch(new Request(rewrittenUrl.toString(), context.request));
-      if (assetRes && assetRes.status < 400) {
+      contentType = assetRes?.headers?.get("content-type") || "";
+      if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
         return assetRes;
       }
     }
 
-    // 3. If it's a JS or CSS file and not found, NEVER return HTML shell. Return a 404 with proper MIME type.
-    if (/\.(js|css)$/i.test(pathname)) {
+    // 3. If it's a JS or CSS file and not found as static asset, NEVER return HTML shell. Return a 404 with proper MIME type.
+    if (isJsOrCss) {
       const isJs = /\.js$/i.test(pathname);
       return new Response(`/* Asset not found: ${pathname} */`, {
         status: 404,
@@ -43,3 +45,4 @@ export async function onRequest(context: { request: Request; env: any; waitUntil
     waitUntil: (p: Promise<any>) => context.waitUntil(p)
   });
 }
+

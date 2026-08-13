@@ -678,10 +678,13 @@ export async function handleUnifiedCloudflareRequest(
       assetUrl = request.url.substring(0, request.url.indexOf('/assets/')) + '/assets/' + path.split('/assets/')[1];
     }
     const assetRes = await env.ASSETS.fetch(new Request(assetUrl, request));
-    if (assetRes && assetRes.status < 400) {
+    const contentType = assetRes?.headers?.get("content-type") || "";
+    const isJsOrCss = /\.(js|css)$/i.test(path);
+
+    if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
       return assetRes;
     }
-    if (/\.(js|css)$/i.test(path)) {
+    if (isJsOrCss) {
       const isJs = /\.js$/i.test(path);
       return new Response(`/* Asset not found: ${path} */`, {
         status: 404,

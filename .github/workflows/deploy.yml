@@ -38,10 +38,11 @@ jobs:
       - name: Generate Dynamic Sitemap
         run: node generate-sitemap.js
 
-      - name: Ensure _redirects and _headers in dist
+      - name: Ensure _redirects, _headers, and _routes.json in dist
         run: |
           cp public/_redirects dist/_redirects || true
           cp public/_headers dist/_headers || true
+          cp public/_routes.json dist/_routes.json || true
 
       - name: Deploy Unified App to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

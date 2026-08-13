@@ -1,9 +1,14 @@
-/assets/*
-  Content-Type: application/javascript
+/assets/*.js
+  Content-Type: application/javascript; charset=utf-8
   X-Content-Type-Options: nosniff
 
+/assets/*.css
+  Content-Type: text/css; charset=utf-8
+
 /*.js
-  Content-Type: application/javascript
+  Content-Type: application/javascript; charset=utf-8
+  X-Content-Type-Options: nosniff
 
 /*.css
-  Content-Type: text/css
+  Content-Type: text/css; charset=utf-8
+
