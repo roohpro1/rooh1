@@ -1144,14 +1144,22 @@ export default function App() {
         seoKeywords: aiTags
       };
 
-      // Save to Firestore 'apps' collection explicitly using 5-digit short ID doc name
+      // Save review to Cloudflare Native Edge (R2 / D1 / KV)
       try {
-        await setDoc(doc(db, "apps", newShortId), {
-          ...newAppObj,
-          createdAt: serverTimestamp()
-        }, { merge: true });
-      } catch (fsErr) {
-        console.warn("Save review to Firestore client fallback notice:", fsErr);
+        await fetch("/api/portal1/upload-review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            appId: newShortId,
+            name: cleanAppName,
+            slug: cleanSlug,
+            reviewHtml: formattedHtml,
+            playStoreUrl: playStoreUrl,
+            packageId: packageId
+          })
+        });
+      } catch (cfErr) {
+        console.warn("Save review to Cloudflare worker notice:", cfErr);
       }
 
       setAppsList(prev => {
@@ -1388,61 +1396,47 @@ export default function App() {
       return;
     }
 
-    if (isPlaceholderFirebase) return;
-
     try {
-      let docSnap = await getDoc(doc(db, "apps", key));
-      if (!docSnap.exists()) {
-        const qCode = query(collection(db, "apps"), where("appCode", "==", key), limit(1));
-        const snapCode = await getDocs(qCode);
-        if (!snapCode.empty) {
-          docSnap = snapCode.docs[0];
-        } else {
-          const qPkg = query(collection(db, "apps"), where("packageId", "==", key), limit(1));
-          const snapPkg = await getDocs(qPkg);
-          if (!snapPkg.empty) {
-            docSnap = snapPkg.docs[0];
-          } else {
-            const qSlug = query(collection(db, "apps"), where("slug", "==", key), limit(1));
-            const snapSlug = await getDocs(qSlug);
-            if (!snapSlug.empty) {
-              docSnap = snapSlug.docs[0];
-            }
+      const res = await fetch("/approved-apps.json");
+      if (res.ok) {
+        const approvedList = await res.json();
+        if (Array.isArray(approvedList)) {
+          const match = approvedList.find((item: any) => {
+            const rawSlug = item.cleanSlug || item.slug || item.id || "";
+            const itemSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
+            return itemSlug === cleanKey || item.id === key || item.packageId === key;
+          });
+
+          if (match) {
+            const appObj: AppReview = {
+              id: match.id || cleanKey,
+              packageId: match.packageId || cleanKey,
+              appCode: match.appCode || match.id || cleanKey,
+              name: match.name || cleanKey,
+              iconUrl: match.iconUrl || "",
+              rating: match.rating || 4.8,
+              description: match.description || "",
+              playStoreUrl: match.playStoreUrl || "",
+              appStoreUrl: match.appStoreUrl || "",
+              tags: match.tags || [],
+              category: match.category || "تطبيقات",
+              createdAt: new Date(),
+              isApproved: true,
+              status: "published",
+              slug: cleanKey
+            };
+
+            setAppsList((prev) => {
+              if (prev.some((a) => a.id === appObj.id)) return prev;
+              return [appObj, ...prev];
+            });
+            setSelectedAppId(appObj.id);
+            setCurrentView("app");
           }
         }
       }
-
-      if (docSnap && docSnap.exists()) {
-        const data = docSnap.data();
-        const appObj: AppReview = {
-          id: docSnap.id,
-          packageId: data.packageId || (docSnap.id.includes('.') ? docSnap.id : ''),
-          appCode: data.appCode || docSnap.id,
-          name: data.name || "",
-          iconUrl: data.iconUrl || "",
-          rating: data.rating || 4.5,
-          description: data.description || "",
-          chart_data: data.chart_data || data.chartData,
-          playStoreUrl: data.playStoreUrl || "",
-          appStoreUrl: data.appStoreUrl || "",
-          videoUrl: data.videoUrl || "",
-          tags: data.tags || [],
-          category: data.category || "أخرى",
-          createdAt: data.createdAt,
-          isApproved: data.isApproved !== undefined ? data.isApproved : true,
-          isUserSearched: data.isUserSearched !== undefined ? data.isUserSearched : false,
-          slug: data.slug || getAppSlug({ id: docSnap.id, name: data.name, packageId: data.packageId, appCode: data.appCode })
-        };
-
-        setAppsList((prev) => {
-          if (prev.some((a) => a.id === appObj.id)) return prev;
-          return [appObj, ...prev];
-        });
-        setSelectedAppId(appObj.id);
-        setCurrentView("app");
-      }
     } catch (e) {
-      console.warn("Notice: Firestore single app fetch error:", e);
+      console.warn("Notice: Cloudflare single app fetch error:", e);
     }
   };
 
@@ -1735,51 +1729,43 @@ export default function App() {
       }
     }
 
-    // 2. Paginated fetch from Firestore (ONLY in Admin View or if static endpoints returned empty)
-    const shouldFetchFirestore = (currentView === "admin") || (appsMap.size === 0);
-    if (shouldFetchFirestore && !isPlaceholderFirebase && db) {
+    // 2. Additional Cloudflare Native API fetch if list is empty
+    if (appsMap.size === 0) {
       try {
-        const qApps = query(collection(db, "apps"), orderBy("createdAt", "desc"), limit(200));
-        const querySnapshot = await getDocs(qApps);
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const cleanSlug = data.slug || getAppSlug({ id: docSnap.id, name: data.name, packageId: data.packageId, appCode: data.appCode });
-          if (!deletedIds.includes(docSnap.id) && !deletedIds.includes(cleanSlug)) {
-            const existingMapItem = appsMap.get(docSnap.id);
-            const isApprovedVal = (
-              data.isApproved === true ||
-              data.isApproved === "true" ||
-              data.status === "published" ||
-              data.status === "approved" ||
-              (existingMapItem && (existingMapItem.isApproved === true || existingMapItem.status === "published"))
-            );
-            const statusVal = isApprovedVal ? "published" : (data.status || "pending");
-
-            appsMap.set(docSnap.id, {
-              ...(existingMapItem || {}),
-              id: docSnap.id,
-              packageId: data.packageId || (docSnap.id.includes('.') ? docSnap.id : ''),
-              appCode: data.appCode || docSnap.id,
-              slug: cleanSlug,
-              name: data.name || existingMapItem?.name || "",
-              iconUrl: data.iconUrl || existingMapItem?.iconUrl || "",
-              rating: data.rating || existingMapItem?.rating || 4.5,
-              description: data.description || existingMapItem?.description || "",
-              chart_data: data.chart_data || data.chartData || existingMapItem?.chart_data,
-              playStoreUrl: data.playStoreUrl || existingMapItem?.playStoreUrl || "",
-              appStoreUrl: data.appStoreUrl || existingMapItem?.appStoreUrl || "",
-              videoUrl: data.videoUrl || existingMapItem?.videoUrl || "",
-              tags: data.tags || existingMapItem?.tags || [],
-              category: data.category || existingMapItem?.category || "أخرى",
-              createdAt: data.createdAt ? parseItemDate({ createdAt: data.createdAt }) : (existingMapItem?.createdAt || new Date()),
-              isApproved: isApprovedVal,
-              status: statusVal,
-              isUserSearched: data.isUserSearched !== undefined ? data.isUserSearched : false
+        const cfRes = await fetch("/api/approved-apps");
+        if (cfRes.ok) {
+          const cfApps = await cfRes.json();
+          if (Array.isArray(cfApps)) {
+            cfApps.forEach((item: any) => {
+              const rawSlug = item.cleanSlug || item.slug || item.id || "";
+              const cleanSlug = String(rawSlug).toLowerCase().replace(/^\/+|\.html$/gi, '').trim();
+              if (cleanSlug && !deletedIds.includes(item.id) && !deletedIds.includes(cleanSlug)) {
+                const existing = appsMap.get(item.id || cleanSlug);
+                appsMap.set(item.id || cleanSlug, {
+                  ...(existing || {}),
+                  ...item,
+                  id: item.id || cleanSlug,
+                  packageId: item.packageId || cleanSlug,
+                  appCode: item.appCode || item.id || cleanSlug,
+                  slug: cleanSlug,
+                  name: item.name || cleanSlug,
+                  iconUrl: item.iconUrl || existing?.iconUrl || "",
+                  rating: item.rating || existing?.rating || 4.8,
+                  description: item.description || existing?.description || "",
+                  playStoreUrl: item.playStoreUrl || existing?.playStoreUrl || "",
+                  appStoreUrl: item.appStoreUrl || existing?.appStoreUrl || "",
+                  tags: item.tags || existing?.tags || [],
+                  category: item.category || existing?.category || "تطبيقات",
+                  createdAt: parseItemDate(item) || parseItemDate(existing),
+                  isApproved: true,
+                  status: "published"
+                });
+              }
             });
           }
-        });
+        }
       } catch (e) {
-        console.warn("Notice: Firestore apps query notice (using local static backup):", e);
+        console.warn("Notice: Cloudflare apps fetch error:", e);
       }
     }
 
