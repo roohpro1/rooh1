@@ -22,7 +22,9 @@ export default {
     }
 
     if (!slug) {
-      return fetch(request); // Pass through to standard app
+      // التعديل هنا: استخدام env.ASSETS.fetch بدلاً من fetch(request) 
+      // لمنع الدخول في حلقة مفرغة وتوجيه الطلب للملفات الثابتة مباشرة
+      return env.ASSETS.fetch(request); 
     }
 
     const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, '-');
