@@ -44,6 +44,12 @@ jobs:
           cp public/_headers dist/_headers || true
           cp public/_routes.json dist/_routes.json || true
 
+      - name: Upload Build Artifact (dist)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-build
+          path: dist/
+
       - name: Deploy Unified App to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
