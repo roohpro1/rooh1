@@ -1456,12 +1456,12 @@ export default function App() {
         return;
       }
 
-      if (pathname === "/admin" || cleanPath === "/admin" || hash === "#/admin") {
+      if (pathname === "/admin" || cleanPath === "/admin" || cleanPath === "/app/admin" || hash === "#/admin") {
         setCurrentView("admin");
         return;
       }
 
-      if (pathname === "/privacy" || cleanPath === "/privacy" || hash === "#/privacy") {
+      if (pathname === "/privacy" || cleanPath === "/privacy" || cleanPath === "/app/privacy" || hash === "#/privacy") {
         setCurrentView("privacy");
         return;
       }
