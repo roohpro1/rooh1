@@ -1,4 +1,4 @@
-// Helper utility for generating short, clean, direct English slugs (e.g. "whats", "facebook", "pubg", "messenger")
+// Helper utility for generating short, clean, direct English slugs (e.g. "whatsapp", "facebook", "pubg", "messenger", "snapchat")
 export function toShortCleanSlug(input: string): string {
   if (!input || !input.trim()) return "app";
 
@@ -9,31 +9,31 @@ export function toShortCleanSlug(input: string): string {
   str = str.replace(/\.html$/gi, "").replace(/^\/+|\/+$/g, "");
 
   // Strip any "-review" or "_review" or "review" endings/starts
-  str = str.replace(/[-_]review$/gi, "").replace(/^review[-_]/gi, "");
+  str = str.replace(/[-_]review$/gi, "").replace(/^review[-_]/gi, "").replace(/[-_]review[-_]/gi, "-");
 
   // Direct Arabic mappings
   if (str.includes("واتساب") || str.includes("واتس")) {
     if (str.includes("عمر") || str.includes("omar")) return "whatsomar";
     if (str.includes("الذهبي") || str.includes("gold")) return "whatsgold";
-    if (str.includes("لايت") || str.includes("lite")) return "whatslite";
-    if (str.includes("أعمال") || str.includes("business")) return "whatsbus";
-    return "whats";
+    if (str.includes("لايت") || str.includes("lite")) return "whatsapp-lite";
+    if (str.includes("أعمال") || str.includes("business")) return "whatsapp-business";
+    return "whatsapp";
   }
   if (str.includes("فيسبوك") || str.includes("فيس")) {
-    if (str.includes("لايت") || str.includes("lite")) return "facebooklite";
+    if (str.includes("لايت") || str.includes("lite")) return "facebook-lite";
     return "facebook";
   }
   if (str.includes("ماسنجر") || str.includes("مسنجر")) {
-    if (str.includes("لايت") || str.includes("lite")) return "messengerlite";
+    if (str.includes("لايت") || str.includes("lite")) return "messenger-lite";
     return "messenger";
   }
-  if (str.includes("انستقرام") || str.includes("إنستغرام") || str.includes("انستجرام") || str.includes("انستا") || str.includes("انستغرام")) return "insta";
+  if (str.includes("انستقرام") || str.includes("إنستغرام") || str.includes("انستجرام") || str.includes("انستا") || str.includes("انستغرام")) return "instagram";
   if (str.includes("تيليجرام") || str.includes("تليجرام") || str.includes("تلجرام")) return "telegram";
-  if (str.includes("يوتيوب")) return "yt";
+  if (str.includes("يوتيوب")) return "youtube";
   if (str.includes("تيك توك") || str.includes("تيكتوك")) return "tiktok";
   if (str.includes("شات جي بي تي") || str.includes("شات جبيتي")) return "chatgpt";
   if (str.includes("ببجي")) return "pubg";
-  if (str.includes("سناب شات") || str.includes("سناب")) return "snap";
+  if (str.includes("سناب شات") || str.includes("سناب")) return "snapchat";
   if (str.includes("كاب كات")) return "capcut";
   if (str.includes("نتفليكس")) return "netflix";
   if (str.includes("سبوتيفاي")) return "spotify";
@@ -49,21 +49,21 @@ export function toShortCleanSlug(input: string): string {
     .trim();
 
   // Common English app names check
-  if (str.includes("whatsapp")) {
+  if (str.includes("whatsapp") || str === "whats" || str === "wats") {
     if (str.includes("omar")) return "whatsomar";
     if (str.includes("gold")) return "whatsgold";
-    if (str.includes("lite")) return "whatslite";
-    if (str.includes("business")) return "whatsbus";
-    return "whats";
+    if (str.includes("lite")) return "whatsapp-lite";
+    if (str.includes("business")) return "whatsapp-business";
+    return "whatsapp";
   }
-  if (str.includes("facebook")) return str.includes("lite") ? "facebooklite" : "facebook";
-  if (str.includes("messenger")) return str.includes("lite") ? "messengerlite" : "messenger";
-  if (str.includes("instagram")) return "insta";
-  if (str.includes("telegram")) return "telegram";
+  if (str.includes("facebook") || str === "fb") return str.includes("lite") ? "facebook-lite" : "facebook";
+  if (str.includes("messenger") || str === "orca") return str.includes("lite") ? "messenger-lite" : "messenger";
+  if (str.includes("instagram") || str === "insta") return "instagram";
+  if (str.includes("telegram") || str === "tele") return "telegram";
   if (str.includes("chatgpt")) return "chatgpt";
-  if (str.includes("youtube")) return "yt";
+  if (str.includes("youtube") || str === "yt") return "youtube";
   if (str.includes("tiktok")) return "tiktok";
-  if (str.includes("snapchat")) return "snap";
+  if (str.includes("snapchat") || str === "snap") return "snapchat";
   if (str.includes("pubg")) return "pubg";
   if (str.includes("netflix")) return "netflix";
   if (str.includes("spotify")) return "spotify";
@@ -77,14 +77,14 @@ export function toShortCleanSlug(input: string): string {
   const parts = str.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "app";
 
-  let result = parts.length > 1 ? `${parts[0]}${parts[1]}` : parts[0];
-  result = result.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  let result = parts.length > 1 ? `${parts[0]}-${parts[1]}` : parts[0];
+  result = result.replace(/[^a-z0-9\-]/gi, "").toLowerCase().replace(/-+/g, "-").replace(/^-|-$/g, "");
 
   // Strip review again if any residue remains
-  result = result.replace(/review$/gi, "");
+  result = result.replace(/[-_]?review$/gi, "");
 
-  if (result.length > 14) {
-    result = result.substring(0, 14);
+  if (result.length > 25) {
+    result = result.substring(0, 25).replace(/-+$/, "");
   }
 
   return result || "app";

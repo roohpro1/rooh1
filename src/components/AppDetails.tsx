@@ -248,7 +248,7 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
     }
   };
 
-  // Main Page Download Countdown Timer with Automatic Google Play / App Store Redirection
+  // Main Page Download Countdown Timer - Prepares clean download link seamlessly
   useEffect(() => {
     if (countdown === null) return;
 
@@ -260,53 +260,23 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
     } else {
       setIsCounting(false);
       setDownloadReady(true);
-
-      // Automatic Redirection to Google Play / App Store URL when waiting transition completes
-      const targetUrl = getValidStoreUrl(app, activeStoreTab);
-      if (targetUrl) {
-        try {
-          if (isMobile) {
-            window.location.href = targetUrl;
-          } else {
-            const opened = window.open(targetUrl, "_blank");
-            if (!opened || opened.closed || typeof opened.closed === "undefined") {
-              window.location.href = targetUrl;
-            }
-          }
-        } catch (e) {
-          window.location.href = targetUrl;
-        }
-      }
     }
   }, [countdown]);
 
   const handleDownloadLinkClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, customUrl?: string) => {
-    e.preventDefault();
     const targetUrl = customUrl || getValidStoreUrl(app, activeStoreTab);
     if (!targetUrl) return;
 
     const hasRewardedCode = isRealAdCode(globalSettings.adsRewardedCode);
 
     if (globalSettings.enableAds && hasRewardedCode && canShowFullScreenAd()) {
+      e.preventDefault();
       recordFullScreenAdShown();
       setPendingDownloadUrl(targetUrl);
       setShowRewardedAd(true);
       setRewardedTimer(5);
-    } else {
-      if (isMobile) {
-        // Direct location redirect on mobile prevents popup blocking and opens Google Play native app
-        window.location.href = targetUrl;
-      } else {
-        try {
-          const opened = window.open(targetUrl, "_blank");
-          if (!opened || opened.closed || typeof opened.closed === "undefined") {
-            window.location.href = targetUrl;
-          }
-        } catch (err) {
-          window.location.href = targetUrl;
-        }
-      }
     }
+    // Otherwise allow natural browser anchor navigation to targetUrl with target="_blank"
   };
 
   // Execute redirection when rewarded timer reaches 0 or user clicks confirm
