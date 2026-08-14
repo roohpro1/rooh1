@@ -5,6 +5,7 @@
   ],
   "exclude": [
     "/assets/*",
+    "/app/assets/*",
     "/*.js",
     "/*.css",
     "/*.png",

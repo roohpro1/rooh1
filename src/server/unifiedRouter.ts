@@ -739,22 +739,21 @@ export async function handleUnifiedCloudflareRequest(
   }
 
   // Static Assets pass-through via env.ASSETS
-  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp|avif|wasm)$/i.test(path) || path.startsWith("/app/assets/") || path.startsWith("/assets/");
+  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp|avif|wasm)$/i.test(path) || path.startsWith("/app") || path.startsWith("/assets/");
   if (isStaticAsset && env.ASSETS && typeof env.ASSETS.fetch === "function") {
     let assetRes: Response | null = null;
     
-    // معالجة مسارات الأصول الخاصة بالبوابة الفرعية /app
-    if (path.startsWith("/app/")) {
-      const strippedPath = path.replace(/^\/app/, "");
-      const assetReq = new Request(new URL(strippedPath, request.url), request);
+    // معالجة دقيقة لمسارات البوابة الفرعية /app
+    if (path.startsWith("/app")) {
       try {
+        const assetReq = new Request(new URL(path, request.url), request);
         assetRes = await env.ASSETS.fetch(assetReq);
       } catch (_) {}
 
       if (!assetRes || assetRes.status === 404) {
-        const rawAssetReq = new Request(new URL(path, request.url), request);
         try {
-          assetRes = await env.ASSETS.fetch(rawAssetReq);
+          const indexReq = new Request(new URL("/app/index.html", request.url), request);
+          assetRes = await env.ASSETS.fetch(indexReq);
         } catch (_) {}
       }
     }
