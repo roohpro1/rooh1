@@ -706,11 +706,30 @@ export async function handleUnifiedCloudflareRequest(
   ctx?: { waitUntil?: (p: Promise<any>) => void }
 ): Promise<Response> {
   const url = new URL(request.url);
+  const hostname = url.hostname.toLowerCase();
   const path = url.pathname;
   const method = request.method;
   const siteBase = getBaseUrl(env);
   const bucket = getBucket(env);
   const d1 = getD1(env);
+
+  // 0. Canonical Domain 301 Redirect for *.pages.dev and *.workers.dev
+  // Permanently redirects all preview/pages.dev links to the official custom domain https://roohpro.com
+  if (
+    (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
+    !hostname.includes("localhost") &&
+    !hostname.includes("127.0.0.1")
+  ) {
+    const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
+    return new Response(null, {
+      status: 301,
+      headers: {
+        Location: targetCanonicalUrl,
+        "Cache-Control": "public, max-age=86400",
+        "X-Robots-Tag": "noindex, nofollow"
+      }
+    });
+  }
 
   // Preflight CORS
   if (method === "OPTIONS") {
@@ -1218,6 +1237,19 @@ export async function handleUnifiedCloudflareRequest(
     // ========================================================================
     // 10. Default Route (/app, /app/, /) -> Frontend SPA Shell
     // ========================================================================
+    if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
+      try {
+        const indexReq = new Request(new URL("/index.html", request.url), request);
+        const indexRes = await env.ASSETS.fetch(indexReq);
+        if (indexRes && indexRes.status < 400) {
+          const headers = new Headers(indexRes.headers);
+          headers.set("Content-Type", "text/html; charset=utf-8");
+          headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+          return new Response(indexRes.body, { status: 200, headers });
+        }
+      } catch (_) {}
+    }
+
     if (bucket) {
       try {
         const obj = await bucket.get("index.html");

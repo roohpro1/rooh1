@@ -309,9 +309,27 @@ var STATIC_ASSET_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot
 var workers_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const hostname = url.hostname.toLowerCase();
     const path = url.pathname;
     const method = request.method;
     const acceptHeader = request.headers.get("accept") || "";
+
+    if (
+      (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
+      !hostname.includes("localhost") &&
+      !hostname.includes("127.0.0.1")
+    ) {
+      const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
+      return new Response(null, {
+        status: 301,
+        headers: {
+          Location: targetCanonicalUrl,
+          "Cache-Control": "public, max-age=86400",
+          "X-Robots-Tag": "noindex, nofollow"
+        }
+      });
+    }
+
     try {
       const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith("/app/assets/") || path.startsWith("/assets/");
       if (isStaticAsset) {

@@ -67,9 +67,27 @@ function getAppHtmlShell(siteBase: string, pageTitle?: string, appSlug?: string)
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const hostname = url.hostname.toLowerCase();
     const path = url.pathname;
     const method = request.method;
     const siteBase = (env.SITE_BASE_URL || "https://roohpro.com").replace(/\/+$/, "");
+
+    // 0. Canonical Domain 301 Redirect for *.pages.dev and *.workers.dev
+    if (
+      (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
+      !hostname.includes("localhost") &&
+      !hostname.includes("127.0.0.1")
+    ) {
+      const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
+      return new Response(null, {
+        status: 301,
+        headers: {
+          Location: targetCanonicalUrl,
+          "Cache-Control": "public, max-age=86400",
+          "X-Robots-Tag": "noindex, nofollow"
+        }
+      });
+    }
 
     // Global CORS Headers supporting custom admin headers
     const corsHeaders: Record<string, string> = {
