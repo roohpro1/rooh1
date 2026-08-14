@@ -738,22 +738,23 @@ export async function handleUnifiedCloudflareRequest(
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Static Assets pass-through via env.ASSETS
-  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp|avif|wasm)$/i.test(path) || path.startsWith("/app") || path.startsWith("/assets/");
+  // Static Assets pass-through via env.ASSETS (only true asset files with extensions or /assets/ /app/assets/)
+  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp|avif|wasm)$/i.test(path) || path.startsWith("/assets/") || path.startsWith("/app/assets/");
   if (isStaticAsset && env.ASSETS && typeof env.ASSETS.fetch === "function") {
     let assetRes: Response | null = null;
     
-    // معالجة دقيقة لمسارات البوابة الفرعية /app
-    if (path.startsWith("/app")) {
+    // معالجة مسارات الأصول الخاصة بالبوابة الفرعية /app/assets/
+    if (path.startsWith("/app/assets/")) {
+      const strippedPath = path.replace(/^\/app/, "");
+      const assetReq = new Request(new URL(strippedPath, request.url), request);
       try {
-        const assetReq = new Request(new URL(path, request.url), request);
         assetRes = await env.ASSETS.fetch(assetReq);
       } catch (_) {}
 
       if (!assetRes || assetRes.status === 404) {
+        const rawAssetReq = new Request(new URL(path, request.url), request);
         try {
-          const indexReq = new Request(new URL("/app/index.html", request.url), request);
-          assetRes = await env.ASSETS.fetch(indexReq);
+          assetRes = await env.ASSETS.fetch(rawAssetReq);
         } catch (_) {}
       }
     }
@@ -801,9 +802,9 @@ export async function handleUnifiedCloudflareRequest(
     }
 
     // ========================================================================
-    // 2. Candidate App Search Flow (/api/portal1/candidates, /api/candidates, /api/search-candidates)
+    // 2. Candidate App Search Flow (/api/agent/search, /api/portal1/candidates, /api/candidates, /api/search-candidates)
     // ========================================================================
-    if ((path === "/api/portal1/candidates" || path === "/api/candidates" || path === "/api/search-candidates") && (method === "GET" || method === "POST")) {
+    if ((path === "/api/agent/search" || path === "/api/portal1/candidates" || path === "/api/candidates" || path === "/api/search-candidates") && (method === "GET" || method === "POST")) {
       let query = "";
       if (method === "GET") {
         query = url.searchParams.get("q") || url.searchParams.get("query") || "";
@@ -833,9 +834,9 @@ export async function handleUnifiedCloudflareRequest(
     }
 
     // ========================================================================
-    // 3. AI Review Generator (1500+ Words) (/api/portal1/generate-review, /api/generate-review)
+    // 3. AI Review Generator (1500+ Words) (/api/agent/generate, /api/portal1/generate-review, /api/generate-review)
     // ========================================================================
-    if ((path === "/api/portal1/generate-review" || path === "/api/generate-review") && method === "POST") {
+    if ((path === "/api/agent/generate" || path === "/api/portal1/generate-review" || path === "/api/generate-review") && method === "POST") {
       const body = await request.json().catch(() => ({})) as any;
       const { appName, devName, category, rating, packageId, storeUrl, autoUpload } = body;
 

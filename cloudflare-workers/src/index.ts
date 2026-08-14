@@ -94,23 +94,24 @@ export default {
       });
     }
 
-    // Static asset handling using env.ASSETS if available
-    const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith("/app") || path.startsWith("/assets/");
+    // Static asset handling using env.ASSETS if available (only true asset files with extensions or /assets/ /app/assets/)
+    const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith("/assets/") || path.startsWith("/app/assets/");
     if (isStaticAsset) {
       if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
         let assetRes: Response | null = null;
         
-        // معالجة دقيقة لمسارات البوابة الفرعية /app
-        if (path.startsWith("/app")) {
+        // معالجة مسارات الأصول الخاصة بالبوابة الفرعية /app/assets/
+        if (path.startsWith("/app/assets/")) {
+          const strippedPath = path.replace(/^\/app/, "");
+          const assetReq = new Request(new URL(strippedPath, request.url), request);
           try {
-            const assetReq = new Request(new URL(path, request.url), request);
             assetRes = await env.ASSETS.fetch(assetReq);
           } catch (_) {}
 
           if (!assetRes || assetRes.status === 404) {
+            const rawAssetReq = new Request(new URL(path, request.url), request);
             try {
-              const indexReq = new Request(new URL("/app/index.html", request.url), request);
-              assetRes = await env.ASSETS.fetch(indexReq);
+              assetRes = await env.ASSETS.fetch(rawAssetReq);
             } catch (_) {}
           }
         }
