@@ -1222,7 +1222,7 @@ export async function handleUnifiedCloudflareRequest(
     if (method === "GET" && path.length > 1 && !path.startsWith("/api/") && !path.startsWith("/assets/")) {
       const cleanSlug = path.replace(/^\/app\/?/i, "").replace(/^\/+|\.html$/gi, "").trim();
 
-      if (cleanSlug && cleanSlug !== "index.html" && cleanSlug !== "admin" && cleanSlug !== "privacy") {
+      if (cleanSlug && cleanSlug !== "index.html" && cleanSlug !== "admin" && cleanSlug !== "privacy" && cleanSlug !== "app") {
         const articleResponse = await resolveArticleHtml(cleanSlug, env);
         if (articleResponse) return articleResponse;
 

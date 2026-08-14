@@ -81,7 +81,34 @@ export async function onRequest(context: {
     });
   }
 
-  // 4. Try resolving pre-rendered R2 HTML review for article paths (/app/:slug, /:slug)
+  // 4. Instant Main Portal Gateway Route (/app, /app/, /) -> Immediate SPA delivery
+  if (pathname === "/app" || pathname === "/app/" || pathname === "/" || pathname === "/index.html") {
+    if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
+      try {
+        const indexReq = new Request(new URL("/index.html", context.request.url), context.request);
+        const indexRes = await context.env.ASSETS.fetch(indexReq);
+        if (indexRes && indexRes.status < 400) {
+          const headers = new Headers(indexRes.headers);
+          headers.set("Content-Type", "text/html; charset=utf-8");
+          headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+          return new Response(indexRes.body, {
+            status: 200,
+            headers
+          });
+        }
+      } catch (_) {}
+    }
+    if (typeof context.next === "function") {
+      try {
+        const nextRes = await context.next();
+        if (nextRes && nextRes.status < 400) {
+          return nextRes;
+        }
+      } catch (_) {}
+    }
+  }
+
+  // 5. Try resolving pre-rendered R2 HTML review for article paths (/app/:slug, /:slug)
   if (context.request.method === "GET" && pathname.length > 1 && !pathname.startsWith("/assets/")) {
     const bucket =
       context.env?.roohme ||
@@ -98,7 +125,7 @@ export async function onRequest(context: {
         .trim()
         .toLowerCase();
 
-      if (cleanSlug && !["index.html", "admin", "privacy", "manifest.json", "sw.js"].includes(cleanSlug)) {
+      if (cleanSlug && !["index.html", "admin", "privacy", "manifest.json", "sw.js", "app"].includes(cleanSlug)) {
         try {
           const r2Obj =
             (await bucket.get(`${cleanSlug}.html`)) ||
@@ -120,7 +147,7 @@ export async function onRequest(context: {
     }
   }
 
-  // 5. Default Route -> Deliver the real built index.html from Cloudflare Pages ASSETS
+  // 6. Default Route -> Deliver the real built index.html from Cloudflare Pages ASSETS
   if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
     try {
       const indexReq = new Request(new URL("/index.html", context.request.url), context.request);

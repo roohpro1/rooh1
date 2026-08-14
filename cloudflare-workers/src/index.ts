@@ -113,7 +113,7 @@ export default {
         const subSlug = path.replace(/^\/app\/?/i, "").trim().replace(/\.html$/i, "");
 
         // A. If a specific app slug is requested (e.g. /app/TikTok or /app/tiktok)
-        if (subSlug && subSlug !== "index.html") {
+        if (subSlug && subSlug !== "index.html" && subSlug !== "app") {
           // Check D1, R2, or Firestore for pre-rendered article HTML
           const articleResponse = await resolveArticleHtml(subSlug, env, corsHeaders);
           if (articleResponse) return articleResponse;
