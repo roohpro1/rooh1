@@ -68,6 +68,74 @@ async function safeParseResponse(response: Response, fallback?: any): Promise<an
   }
 }
 
+// Clean English SEO slug generator without appending "-review"
+export function cleanAppSlug(input: string, fallbackName?: string): string {
+  if (!input && !fallbackName) return "app";
+  let str = String(input || fallbackName || "app").trim().toLowerCase();
+
+  // Strip query/hash and trailing .html or leading/trailing slashes
+  str = str.split("?")[0].split("#")[0];
+  str = str.replace(/\.html$/gi, "").replace(/^\/+|\/+$/g, "");
+
+  // Strip any "-review", "_review", or "review"
+  str = str.replace(/[-_]review$/gi, "").replace(/^review[-_]/gi, "").replace(/[-_]review[-_]/gi, "-");
+
+  // Direct Arabic mappings
+  if (str.includes("واتساب") || str.includes("واتس")) {
+    if (str.includes("عمر") || str.includes("omar")) return "whatsomar";
+    if (str.includes("الذهبي") || str.includes("gold")) return "whatsgold";
+    if (str.includes("لايت") || str.includes("lite")) return "whatsapp-lite";
+    if (str.includes("أعمال") || str.includes("business")) return "whatsapp-business";
+    return "whatsapp";
+  }
+  if (str.includes("فيسبوك") || str.includes("فيس")) {
+    if (str.includes("لايت") || str.includes("lite")) return "facebook-lite";
+    return "facebook";
+  }
+  if (str.includes("ماسنجر") || str.includes("مسنجر")) {
+    if (str.includes("لايت") || str.includes("lite")) return "messenger-lite";
+    return "messenger";
+  }
+  if (str.includes("انستقرام") || str.includes("إنستغرام") || str.includes("انستجرام") || str.includes("انستا") || str.includes("انستغرام")) return "instagram";
+  if (str.includes("تيليجرام") || str.includes("تليجرام") || str.includes("تلجرام")) return "telegram";
+  if (str.includes("يوتيوب")) return "youtube";
+  if (str.includes("تيك توك") || str.includes("تيكتوك")) return "tiktok";
+  if (str.includes("شات جي بي تي") || str.includes("شات جبيتي")) return "chatgpt";
+  if (str.includes("ببجي")) return "pubg";
+  if (str.includes("سناب شات") || str.includes("سناب")) return "snapchat";
+  if (str.includes("كاب كات")) return "capcut";
+  if (str.includes("نتفليكس")) return "netflix";
+  if (str.includes("سبوتيفاي")) return "spotify";
+  if (str.includes("تويتر") || str.includes("منصة اكس") || str.includes("منصة x")) return "x";
+  if (str.includes("ديسكورد")) return "discord";
+  if (str.includes("لينكد") || str.includes("لينكد إن")) return "linkedin";
+  if (str.includes("ريديت")) return "reddit";
+
+  // Remove filler words
+  str = str
+    .replace(/\b(review|reviews|official|edition|version|mobile|android|iphone|download|free|apk|mod|guide|pro|app|application|appstore|playstore|latest|update)\b/gi, " ")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .trim();
+
+  // English App names mapping
+  if (str.includes("whatsapp")) return str.includes("lite") ? "whatsapp-lite" : "whatsapp";
+  if (str.includes("facebook")) return str.includes("lite") ? "facebook-lite" : "facebook";
+  if (str.includes("messenger")) return str.includes("lite") ? "messenger-lite" : "messenger";
+  if (str.includes("instagram")) return "instagram";
+  if (str.includes("telegram")) return "telegram";
+  if (str.includes("tiktok")) return "tiktok";
+  if (str.includes("reddit")) return "reddit";
+  if (str.includes("linkedin")) return "linkedin";
+  if (str.includes("discord")) return "discord";
+  if (str.includes("twitter") || str === "x") return "x";
+
+  // Final cleanup of any residue review word
+  str = str.replace(/[-_]review$/gi, "").replace(/^review[-_]/gi, "").replace(/^-+|-+$/g, "");
+
+  return str || (fallbackName ? cleanAppSlug(fallbackName) : "app");
+}
+
 const app = express();
 const PORT = 3000;
 
@@ -1295,7 +1363,7 @@ function generateExhaustiveFallbackReview(metadata: any, devName: string, rawDes
     "مراجعة شاملة"
   ];
 
-  const cleanSlug = metadata.name ? metadata.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-review' : 'app-review';
+  const cleanSlug = cleanAppSlug(metadata.name || "app");
   const metaTitle = `تنزيل ومراجعة تطبيق ${name} | روابط مباشرة وآمنة 100%`;
   const metaDescription = `احصل على مراجعة تفصيلية وتنزيل آمن لتطبيق ${name} مجاناً برابط مباشر.`;
 
@@ -1381,7 +1449,7 @@ async function generateAppReviewAI(
 
 يجب إرجاع النتيجة بتنسيق JSON نظيف وصالح يحتوي على الحقول التالية حصراً:
 {
-  "slug": "رابط ديناميكي فريد باللغة الإنجليزية يتكون من كلمات مفصولة بشرطة بناءً على اسم التطبيق بدون مسافات (مثال: pubg-mobile-review)",
+  "slug": "رابط ديناميكي فريد باللغة الإنجليزية مشتق مباشرة من اسم التطبيق بالإنجليزية بدون إضافة كلمة review (مثال: pubg أو whatsapp أو facebook)",
   "metaTitle": "عنوان المقالة المتوافق مع محركات البحث SEO (مثال: تنزيل ومراجعة تطبيق PUBG Mobile 2026)",
   "metaDescription": "وصف تعريفي دقيق وجذاب للمقالة والتطبيق لا يتجاوز 160 حرفاً",
   "seoKeywords": ["مصفوفة تحتوي على الكلمات المفتاحية الرئيسية والكلمات الدلالية الخاصة بالتطبيق والمقالة"],
@@ -1444,9 +1512,7 @@ async function generateAppReviewAI(
           if (geminiResponse && geminiResponse.text) {
             const aiResult = JSON.parse(geminiResponse.text);
             if (aiResult.article && aiResult.article.length > 200) {
-              const cleanSlug = aiResult.slug
-                ? aiResult.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-                : (metadata.name ? metadata.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-review' : 'app-review');
+              const cleanSlug = cleanAppSlug(aiResult.slug || metadata.name || "app");
 
               return {
                 slug: cleanSlug,
@@ -1628,7 +1694,7 @@ const handleScrapeAndReview = async (req: express.Request, res: express.Response
       article: aiResult.article,
       tags: aiResult.tags,
       category: aiResult.category || metadata.category,
-      slug: aiResult.slug || (metadata.name ? metadata.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-review' : 'app-review'),
+      slug: cleanAppSlug(aiResult.slug || metadata.name || "app"),
       metaTitle: aiResult.metaTitle || `${metadata.name} - مراجعة شاملة وتثبيت آمن | اكتشف تطبيق`,
       metaDescription: aiResult.metaDescription || `تحميل وتنزيل تطبيق ${metadata.name} برابط مباشر وآمن 100%.`,
       seoKeywords: aiResult.seoKeywords || aiResult.tags || [metadata.name, `تنزيل ${metadata.name}`]
@@ -2109,8 +2175,7 @@ async function pullAndReviewApps(limit: number): Promise<{ successCount: number;
 
         const db = getFirebaseDb();
         const shortId = Math.floor(10000 + Math.random() * 90000).toString();
-        const rawSlug = aiResult.slug || (metadata.name ? metadata.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-review' : `${(metadata.packageId || pkg).replace(/\./g, '-')}-review`);
-        const cleanSlug = rawSlug.replace(/\.html$/i, "");
+        const cleanSlug = cleanAppSlug(aiResult.slug || metadata.name || pkg);
         const r2FileName = `${cleanSlug}.html`;
         const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
         const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
@@ -2818,8 +2883,7 @@ const handleSearchAndScrape = async (req: express.Request, res: express.Response
     const aiResult = await generateAppReviewAI(metadata);
 
     const newShortId = Math.floor(10000 + Math.random() * 90000).toString();
-    const rawSlug = aiResult.slug || (metadata.name ? metadata.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '-review' : `${packageId.replace(/\./g, '-')}-review`);
-    const cleanSlug = rawSlug.replace(/\.html$/i, "");
+    const cleanSlug = cleanAppSlug(aiResult.slug || metadata.name || packageId);
     const r2FileName = `${cleanSlug}.html`;
     const r2WorkerUrl = `https://roohpro.com/${r2FileName}`;
     const articleUrl = `https://roohpro.com/app/${cleanSlug}`;
@@ -7450,19 +7514,7 @@ function ensureAdminFirebaseInitialized() {
 
 function cleanSlugForSitemap(input: string): string {
   if (!input) return "";
-  let s = String(input).trim();
-  if (s.includes("http://") || s.includes("https://")) {
-    try {
-      const u = new URL(s);
-      s = u.pathname.replace(/^\/+/, "");
-    } catch (_) {
-      s = s.replace(/^https?:\/\/[^\/]+\//, "");
-    }
-  }
-  if (s.toLowerCase().endsWith(".html")) {
-    s = s.substring(0, s.length - 5);
-  }
-  return s.split('?')[0].split('#')[0].replace(/[^a-zA-Z0-9\-_]/g, "-").replace(/^-+|-+$/g, "").trim();
+  return cleanAppSlug(input);
 }
 
 function getLocalAppsCache(): Array<{ slug: string; lastmod?: string }> {
