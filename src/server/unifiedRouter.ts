@@ -715,10 +715,12 @@ export async function handleUnifiedCloudflareRequest(
 
   // 0. Canonical Domain 301 Redirect for *.pages.dev and *.workers.dev
   // Permanently redirects all preview/pages.dev links to the official custom domain https://roohpro.com
+  // Ensures sub-path /app and nested paths work seamlessly under https://roohpro.com
   if (
     (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
     !hostname.includes("localhost") &&
-    !hostname.includes("127.0.0.1")
+    !hostname.includes("127.0.0.1") &&
+    !hostname.includes("roohpro.com")
   ) {
     const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
     return new Response(null, {
@@ -737,24 +739,34 @@ export async function handleUnifiedCloudflareRequest(
   }
 
   // Static Assets pass-through via env.ASSETS
-  if (env.ASSETS && (path.includes("/assets/") || /\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|map)$/i.test(path))) {
-    let assetUrl = request.url;
-    if (path.includes('/assets/')) {
-      assetUrl = request.url.substring(0, request.url.indexOf('/assets/')) + '/assets/' + path.split('/assets/')[1];
-    }
-    const assetRes = await env.ASSETS.fetch(new Request(assetUrl, request));
-    const contentType = assetRes?.headers?.get("content-type") || "";
-    const isJsOrCss = /\.(js|css)$/i.test(path);
+  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp|avif|wasm)$/i.test(path) || path.startsWith("/app/assets/") || path.startsWith("/assets/");
+  if (isStaticAsset && env.ASSETS && typeof env.ASSETS.fetch === "function") {
+    let assetRes: Response | null = null;
+    
+    // معالجة مسارات الأصول الخاصة بالبوابة الفرعية /app
+    if (path.startsWith("/app/")) {
+      const strippedPath = path.replace(/^\/app/, "");
+      const assetReq = new Request(new URL(strippedPath, request.url), request);
+      try {
+        assetRes = await env.ASSETS.fetch(assetReq);
+      } catch (_) {}
 
-    if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-      return assetRes;
+      if (!assetRes || assetRes.status === 404) {
+        const rawAssetReq = new Request(new URL(path, request.url), request);
+        try {
+          assetRes = await env.ASSETS.fetch(rawAssetReq);
+        } catch (_) {}
+      }
     }
-    if (isJsOrCss) {
-      const isJs = /\.js$/i.test(path);
-      return new Response(`/* Asset not found: ${path} */`, {
-        status: 404,
-        headers: { "Content-Type": isJs ? "application/javascript; charset=utf-8" : "text/css; charset=utf-8", ...corsHeaders }
-      });
+
+    if (!assetRes || assetRes.status === 404) {
+      try {
+        assetRes = await env.ASSETS.fetch(request);
+      } catch (_) {}
+    }
+
+    if (assetRes && (assetRes.status === 200 || assetRes.status === 304)) {
+      return assetRes;
     }
   }
 

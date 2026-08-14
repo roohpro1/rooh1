@@ -317,7 +317,8 @@ var workers_default = {
     if (
       (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
       !hostname.includes("localhost") &&
-      !hostname.includes("127.0.0.1")
+      !hostname.includes("127.0.0.1") &&
+      !hostname.includes("roohpro.com")
     ) {
       const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
       return new Response(null, {

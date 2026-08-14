@@ -12,11 +12,12 @@ export async function onRequest(context: {
 
   // 1. Canonical Domain Redirection:
   // If accessed via *.pages.dev or *.workers.dev, immediately 301 redirect to primary custom domain https://roohpro.com
-  // This solves search engines indexing the pages.dev subdomain instead of the official domain.
+  // Ensures sub-path /app and nested paths work seamlessly under https://roohpro.com
   if (
     (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
     !hostname.includes("localhost") &&
-    !hostname.includes("127.0.0.1")
+    !hostname.includes("127.0.0.1") &&
+    !hostname.includes("roohpro.com")
   ) {
     const targetCanonicalUrl = `https://roohpro.com${pathname}${url.search}`;
     return new Response(null, {
@@ -33,18 +34,29 @@ export async function onRequest(context: {
   const isStaticAsset =
     isJsOrCss ||
     pathname.includes("/assets/") ||
-    /\.(png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml|webp)$/i.test(pathname);
+    pathname.startsWith("/app/assets/") ||
+    /\.(png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml|webp|avif|wasm)$/i.test(pathname);
 
   // 2. Static Asset handling:
   if (isStaticAsset) {
     if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
-      try {
-        const assetRes = await context.env.ASSETS.fetch(context.request);
-        const contentType = assetRes?.headers?.get("content-type") || "";
-        if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-          return assetRes;
-        }
-      } catch (_) {}
+      let assetRes: Response | null = null;
+      if (pathname.startsWith("/app/")) {
+        const strippedPath = pathname.replace(/^\/app/, "");
+        const assetReq = new Request(new URL(strippedPath, context.request.url), context.request);
+        try {
+          assetRes = await context.env.ASSETS.fetch(assetReq);
+        } catch (_) {}
+      }
+      if (!assetRes || assetRes.status === 404) {
+        try {
+          assetRes = await context.env.ASSETS.fetch(context.request);
+        } catch (_) {}
+      }
+      const contentType = assetRes?.headers?.get("content-type") || "";
+      if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
+        return assetRes;
+      }
     }
     if (typeof context.next === "function") {
       try {
