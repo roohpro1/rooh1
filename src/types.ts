@@ -29,6 +29,9 @@ export interface AppReview {
   category: string;
   createdAt: any; // Firestore Timestamp
   appCode?: string; // numeric code for direct search (e.g., "101")
+  couponCode?: string; // coupon or discount code
+  couponUrl?: string; // dedicated coupon activation link
+  couponDiscount?: string; // discount percentage or promo offer text
   downloadsCount?: number; // download count indicator
   storeType?: "android" | "ios" | "both";
   isApproved?: boolean; // moderator approval status
@@ -69,6 +72,9 @@ export interface GlobalSettings {
   isPromoEnabled?: boolean; // Developer explicit toggle to enable and show the promotional window
   aiImagePortalUrl?: string; // Customizable AI Image Creation Portal URL (legacy alias)
   showAiImagePortal?: boolean; // Control visibility (show/hide) of instant AI image generator window (legacy alias)
+  couponUrl?: string; // Global active coupon or partner link
+  couponCode?: string; // Global coupon / discount code
+  couponTitle?: string; // Custom title for coupon activation banner
 }
 
 export interface AppRequest {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Star, Download, Play, ShieldAlert, CheckCircle, ExternalLink, RefreshCw, Smartphone, Send, MessageSquare, User, MessageCircle, Facebook, Music, Ghost, Youtube, Shield, Twitter, Award, Copy, Check, Sparkles, Eye } from "lucide-react";
+import { Star, Download, Play, ShieldAlert, CheckCircle, ExternalLink, RefreshCw, Smartphone, Send, MessageSquare, User, MessageCircle, Facebook, Music, Ghost, Youtube, Shield, Twitter, Award, Copy, Check, Sparkles, Eye, Zap } from "lucide-react";
 import { AppReview, GlobalSettings } from "../types";
 import { AdSenseSlot } from "./AdSenseSlot";
 import { CopyLinkButton } from "./CopyLinkButton";
@@ -215,9 +215,39 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
     }
   };
 
+  // Execute direct redirection to store / download safely across mobile & desktop
+  const executeDirectStoreRedirect = (targetUrl: string) => {
+    if (!targetUrl) return;
+    setDownloadReady(true);
+    setIsCounting(false);
+    setCountdown(0);
+
+    if (isMobile) {
+      // On mobile, window.location.href avoids popup blockers and immediately starts Google Play / App Store intent
+      window.location.href = targetUrl;
+    } else {
+      try {
+        const opened = window.open(targetUrl, "_blank", "noopener,noreferrer");
+        if (!opened || opened.closed || typeof opened.closed === "undefined") {
+          window.location.href = targetUrl;
+        }
+      } catch (err) {
+        window.location.href = targetUrl;
+      }
+    }
+  };
+
   // Start download action based on device mode (Mobile vs Desktop)
-  const handleStartDownloadAction = () => {
+  const handleStartDownloadAction = (isFastImmediate = false) => {
     const targetUrl = getValidStoreUrl(app, activeStoreTab);
+    if (!targetUrl) return;
+
+    if (isFastImmediate) {
+      // Fast Direct Installation without waiting
+      executeDirectStoreRedirect(targetUrl);
+      return;
+    }
+
     const hasRewardedCode = isRealAdCode(globalSettings.adsRewardedCode);
 
     if (globalSettings.enableAds && hasRewardedCode && canShowFullScreenAd(globalSettings.enableAds)) {
@@ -248,7 +278,7 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
     }
   };
 
-  // Main Page Download Countdown Timer - Prepares clean download link seamlessly
+  // Main Page Download Countdown Timer - Prepares and automatically starts installation upon countdown completion
   useEffect(() => {
     if (countdown === null) return;
 
@@ -257,9 +287,15 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
         setCountdown(prev => (prev !== null ? prev - 1 : null));
       }, 1000);
       return () => clearTimeout(timer);
-    } else {
+    } else if (countdown === 0) {
       setIsCounting(false);
       setDownloadReady(true);
+      
+      // Auto-trigger installation without stalling at the gate
+      const targetUrl = pendingDownloadUrl || getValidStoreUrl(app, activeStoreTab);
+      if (targetUrl) {
+        executeDirectStoreRedirect(targetUrl);
+      }
     }
   }, [countdown]);
 
@@ -275,8 +311,10 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
       setPendingDownloadUrl(targetUrl);
       setShowRewardedAd(true);
       setRewardedTimer(5);
+    } else {
+      // Direct navigation
+      executeDirectStoreRedirect(targetUrl);
     }
-    // Otherwise allow natural browser anchor navigation to targetUrl with target="_blank"
   };
 
   // Execute redirection when rewarded timer reaches 0 or user clicks confirm
@@ -284,19 +322,7 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
     setShowRewardedAd(false);
     const targetUrl = pendingDownloadUrl || getValidStoreUrl(app, activeStoreTab);
     if (targetUrl) {
-      if (isMobile) {
-        // On mobile, window.location.href avoids popup blocking and triggers Google Play OS app directly
-        window.location.href = targetUrl;
-      } else {
-        try {
-          const opened = window.open(targetUrl, "_blank");
-          if (!opened || opened.closed || typeof opened.closed === "undefined") {
-            window.location.href = targetUrl;
-          }
-        } catch (e) {
-          window.location.href = targetUrl;
-        }
-      }
+      executeDirectStoreRedirect(targetUrl);
     }
     setPendingDownloadUrl(null);
   };
@@ -1173,23 +1199,34 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
                 <div>
                   {/* Stage 1: Initial State */}
                   {countdown === null && !downloadReady && (
-                    <button
-                      onClick={handleStartDownloadAction}
-                      className={`w-full text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-xl hover:scale-[1.02] active:scale-95 transition-all cursor-pointer text-base sm:text-lg ${
-                        activeStoreTab === "ios"
-                          ? "bg-gradient-to-r from-red-600 via-rose-600 to-red-700 shadow-red-500/20"
-                          : "bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 shadow-blue-500/20"
-                      }`}
-                    >
-                      <Download className="w-6 h-6" />
-                      <span>تحميل {activeStoreTab === "ios" ? "نسخة الآيفون (iOS)" : "نسخة الأندرويد (APK)"} الآمنة</span>
-                    </button>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => handleStartDownloadAction(false)}
+                        className={`w-full text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 shadow-xl hover:scale-[1.02] active:scale-95 transition-all cursor-pointer text-base sm:text-lg ${
+                          activeStoreTab === "ios"
+                            ? "bg-gradient-to-r from-red-600 via-rose-600 to-red-700 shadow-red-500/20"
+                            : "bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 shadow-blue-500/20"
+                        }`}
+                      >
+                        <Download className="w-6 h-6" />
+                        <span>تحميل {activeStoreTab === "ios" ? "نسخة الآيفون (iOS)" : "نسخة الأندرويد (APK)"} الآمنة</span>
+                      </button>
+
+                      {/* Fast Instant Download Option */}
+                      <button
+                        onClick={() => handleStartDownloadAction(true)}
+                        className="w-full bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 font-black py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs sm:text-sm shadow-md transition-all cursor-pointer border border-amber-400/80"
+                      >
+                        <Zap className="w-4 h-4 text-slate-950 fill-current" />
+                        <span>⚡ تثبيت مباشر وفوري بدون انتظار (Fast Install)</span>
+                      </button>
+                    </div>
                   )}
 
                   {/* Stage 2: Smart Countdown Timer */}
                   {isCounting && countdown !== null && (
-                    <div className="flex flex-col items-center justify-center py-3 text-center animate-in fade-in duration-300 bg-blue-50/60 dark:bg-slate-900/40 rounded-2xl border border-blue-200 dark:border-slate-800 p-4">
-                      <div className="relative w-20 h-20 flex items-center justify-center mb-3">
+                    <div className="flex flex-col items-center justify-center py-3 text-center animate-in fade-in duration-300 bg-blue-50/60 dark:bg-slate-900/40 rounded-2xl border border-blue-200 dark:border-slate-800 p-4 space-y-3">
+                      <div className="relative w-20 h-20 flex items-center justify-center mb-1">
                         <svg className="absolute w-full h-full transform -rotate-90">
                           <circle
                             cx="40"
@@ -1214,31 +1251,45 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
                         <span className="text-2xl font-black font-mono tracking-tight text-black dark:text-blue-400">{countdown}</span>
                       </div>
                       
-                      <p className="text-sm sm:text-base font-black text-red-600 dark:text-red-400 animate-pulse mb-1">يرجى الانتظار لتوليد الرابط الآمن...</p>
-                      <p className="text-xs sm:text-sm text-black dark:text-blue-300 font-black">يرجى عدم مغادرة الصفحة لضمان سلامة التحميل</p>
+                      <div>
+                        <p className="text-sm sm:text-base font-black text-red-600 dark:text-red-400 animate-pulse mb-0.5">يرجى الانتظار لتوليد الرابط والبدء التلقائي...</p>
+                        <p className="text-xs sm:text-sm text-black dark:text-blue-300 font-bold">سيتم فتح المتجر تلقائياً وبدء التثبيت فور انتهاء العداد ⚡</p>
+                      </div>
+
+                      {/* Skip Waiting Button */}
+                      <button
+                        onClick={() => handleStartDownloadAction(true)}
+                        className="w-full max-w-xs py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>🚀 فتح وبدء التثبيت الآن دون انتظار</span>
+                      </button>
                     </div>
                   )}
 
                   {/* Stage 3: Ready state pointing directly to playStoreUrl and appStoreUrl */}
                   {downloadReady && (
-                    <div className="space-y-3 text-center animate-in fade-in zoom-in-95 duration-300 bg-emerald-50/60 dark:bg-slate-900/50 p-4 rounded-2xl border-2 border-emerald-300 dark:border-emerald-800">
+                    <div className="space-y-3 text-center animate-in fade-in zoom-in-95 duration-300 bg-emerald-50/80 dark:bg-slate-900/70 p-4 rounded-2xl border-2 border-emerald-400 dark:border-emerald-700 shadow-lg">
                       <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:text-emerald-400 animate-bounce">
                         <CheckCircle className="w-7 h-7 stroke-[3]" />
                       </div>
                       
-                      <p className="text-base sm:text-lg font-black text-black dark:text-blue-400">تم توليد روابط التحميل الرسمية بنجاح!</p>
+                      <div>
+                        <p className="text-base sm:text-lg font-black text-emerald-950 dark:text-emerald-300">تم تجهيز الرابط وبدء التثبيت بنجاح! 🚀</p>
+                        <p className="text-xs text-slate-700 dark:text-slate-300 font-bold mt-1">إذا لم يفتح المتجر تلقائياً بجهازك، انقر على الزر أدناه مباشرة:</p>
+                      </div>
 
-                      <div className="grid grid-cols-1 gap-3 mt-2 text-right">
+                      <div className="grid grid-cols-1 gap-2.5 mt-2 text-right">
                         {activeStoreTab === "android" ? (
                           <a
                             href={getValidStoreUrl(app, "android")}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => handleDownloadLinkClick(e, getValidStoreUrl(app, "android"))}
-                            className="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all cursor-pointer border-2 border-blue-700"
+                            className="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 px-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all cursor-pointer border-2 border-blue-700"
                           >
                             <Play className="w-5 h-5 fill-current shrink-0" />
-                            <span>اضغط للتحميل من متجر Google Play</span>
+                            <span>فتح متجر Google Play وبدء التثبيت فوراً</span>
                           </a>
                         ) : (
                           <a
@@ -1246,10 +1297,10 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => handleDownloadLinkClick(e, getValidStoreUrl(app, "ios"))}
-                            className="w-full text-center bg-red-600 hover:bg-red-700 text-white font-black py-4 px-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all cursor-pointer border-2 border-red-700"
+                            className="w-full text-center bg-red-600 hover:bg-red-700 text-white font-black py-3.5 px-4 rounded-xl text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all cursor-pointer border-2 border-red-700"
                           >
                             <Smartphone className="w-5 h-5 shrink-0" />
-                            <span>اضغط للتحميل من متجر App Store</span>
+                            <span>فتح متجر App Store وبدء التثبيت فوراً</span>
                           </a>
                         )}
                       </div>
@@ -1259,9 +1310,9 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
                           setCountdown(null);
                           setDownloadReady(false);
                         }}
-                        className="text-xs sm:text-sm text-red-600 hover:text-blue-700 dark:text-red-400 dark:hover:text-blue-300 underline font-black block mx-auto mt-2 cursor-pointer"
+                        className="text-xs text-slate-600 hover:text-blue-700 dark:text-slate-400 dark:hover:text-blue-300 underline font-bold block mx-auto mt-2 cursor-pointer"
                       >
-                        إعادة تشغيل العداد
+                        إعادة تحميل الرابط ↻
                       </button>
                     </div>
                   )}
@@ -1279,6 +1330,59 @@ export const AppDetails: React.FC<AppDetailsProps> = ({
               </div>
 
             </div>
+
+            {/* Coupon / Promo Activation Card */}
+            {(() => {
+              const activeCouponCode = app.couponCode || globalSettings.couponCode || appCode;
+              const couponDestination = (app.couponUrl || globalSettings.couponUrl || globalSettings.promoTargetUrl || "https://roohpro.com/app").trim();
+              const couponDiscount = app.couponDiscount || "خصم وعرض حصري معتمد";
+
+              return (
+                <div className="bg-gradient-to-r from-amber-500/10 via-red-500/5 to-amber-500/10 dark:from-amber-950/30 dark:via-red-950/20 dark:to-amber-950/30 border-2 border-dashed border-amber-500/70 dark:border-amber-500/50 rounded-3xl p-5 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 text-right w-full sm:w-auto">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xl shadow-md shrink-0">
+                      🏷️
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm sm:text-base font-black text-slate-950 dark:text-white">تفعيل كود الكوبون والخصم الحصري</h4>
+                        <span className="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">{couponDiscount}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 font-bold mt-0.5">
+                        استخدم الرمز الرسمي المعتمد للتطبيق للحصول على الميزات الإضافية
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                    <div className="bg-white dark:bg-zinc-900 border border-amber-400/80 rounded-xl px-3 py-2 flex items-center gap-2 shadow-xs">
+                      <span className="font-mono font-black text-sm text-red-600 dark:text-red-400 tracking-wider select-all">{activeCouponCode}</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(activeCouponCode);
+                          setCopiedAppCode(true);
+                          setTimeout(() => setCopiedAppCode(false), 2000);
+                        }}
+                        className="text-[11px] font-bold text-slate-500 hover:text-red-600 cursor-pointer transition-colors"
+                        title="نسخ الكود"
+                      >
+                        {copiedAppCode ? "✓ تم النسخ" : "نسخ"}
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        window.open(couponDestination, "_blank", "noopener,noreferrer");
+                      }}
+                      className="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black px-4 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition-all flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                    >
+                      <Zap className="w-3.5 h-3.5" />
+                      <span>تفعيل الكوبون والانتقال للعرض 🚀</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
