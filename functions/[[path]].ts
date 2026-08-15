@@ -11,9 +11,15 @@ export async function onRequest(context: {
   const pathname = url.pathname;
 
   // 1. Canonical Domain Redirection:
-  // If accessed via *.pages.dev or *.workers.dev, immediately 301 redirect to primary custom domain https://roohpro.com
-  // Ensures sub-path /app and nested paths work seamlessly under https://roohpro.com
+  // If accessed directly via *.pages.dev or *.workers.dev, 301 redirect to primary custom domain https://roohpro.com
+  // If request is proxied internally via Reverse Proxy (X-Forwarded-Host or X-Reverse-Proxy), serve content directly without redirecting.
+  const isFromProxy =
+    context.request.headers.get("x-forwarded-host")?.includes("roohpro.com") ||
+    context.request.headers.get("x-reverse-proxy") !== null ||
+    context.request.headers.get("x-from-proxy") !== null;
+
   if (
+    !isFromProxy &&
     (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
     !hostname.includes("localhost") &&
     !hostname.includes("127.0.0.1") &&

@@ -77,7 +77,14 @@ export default {
 
     // 0. Canonical Domain 301 Redirect for *.pages.dev and *.workers.dev
     // Ensures sub-path /app and nested paths work seamlessly under https://roohpro.com
+    // If request is proxied internally via Reverse Proxy (X-Forwarded-Host or X-Reverse-Proxy), serve content directly without redirecting.
+    const isFromProxy =
+      request.headers.get("x-forwarded-host")?.includes("roohpro.com") ||
+      request.headers.get("x-reverse-proxy") !== null ||
+      request.headers.get("x-from-proxy") !== null;
+
     if (
+      !isFromProxy &&
       (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
       !hostname.includes("localhost") &&
       !hostname.includes("127.0.0.1") &&

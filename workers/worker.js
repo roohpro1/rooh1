@@ -314,7 +314,13 @@ var workers_default = {
     const method = request.method;
     const acceptHeader = request.headers.get("accept") || "";
 
+    const isFromProxy =
+      request.headers.get("x-forwarded-host")?.includes("roohpro.com") ||
+      request.headers.get("x-reverse-proxy") !== null ||
+      request.headers.get("x-from-proxy") !== null;
+
     if (
+      !isFromProxy &&
       (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
       !hostname.includes("localhost") &&
       !hostname.includes("127.0.0.1") &&
