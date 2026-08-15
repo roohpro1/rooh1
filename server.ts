@@ -124,7 +124,7 @@ async function startServer() {
         const pageTitle = `دليل ومراجعة شاملة لتطبيق ${title} | منصة روح`;
         const pageDesc = appData.description || `دليل واستعراض ومراجعة تفصيلية شاملة لتطبيق ${title} مع شرح كل المميزات وروابط التنزيل المباشرة والآمنة 100%.`;
         const pageImage = appData.iconUrl || `https://roohpro.com/assets/images/og-home.jpg`;
-        const canonicalUrl = `https://roohpro.com/${cleanSlug}`;
+        const canonicalUrl = `https://roohpro.com/app/${cleanSlug}`;
 
         let indexPath = path.join(process.cwd(), "index.html");
         if (process.env.NODE_ENV === "production") {
