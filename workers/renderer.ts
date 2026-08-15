@@ -13,11 +13,16 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    // Route matching for review pages (e.g., /review/whatsapp or /whatsapp)
+    // Route matching for review pages (e.g., /review/:slug or /app/:slug)
     let slug = '';
     if (pathname.startsWith('/review/')) {
       slug = pathname.replace('/review/', '').trim();
-    } else if (pathname !== '/' && !pathname.includes('.')) {
+    } else if (pathname.startsWith('/app/')) {
+      const sub = pathname.replace('/app/', '').trim();
+      if (sub && sub !== 'admin' && sub !== 'privacy' && !sub.startsWith('assets/')) {
+        slug = sub;
+      }
+    } else if (pathname !== '/' && pathname !== '/app' && pathname !== '/privacy' && pathname !== '/admin' && !pathname.startsWith('/api/') && !pathname.startsWith('/assets/') && !pathname.includes('.')) {
       slug = pathname.replace('/', '').trim();
     }
 

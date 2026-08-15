@@ -103,9 +103,10 @@ export default {
 
       // Main Pages
       xml += `  <url>\n    <loc>${siteUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${siteUrl}/app</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
       xml += `  <url>\n    <loc>${siteUrl}/privacy</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.3</priority>\n  </url>\n`;
 
-      // Published Clean Review Route URLs (Strictly clean slug without .html)
+      // Published Clean Review Route URLs (Strictly clean slug under /app namespace)
       const seenSlugs = new Set<string>();
       for (const app of publishedApps) {
         const cleanSlug = app.slug.replace(/^\/+|\.html$/gi, '').trim();
@@ -113,7 +114,7 @@ export default {
         seenSlugs.add(cleanSlug);
 
         xml += `  <url>\n`;
-        xml += `    <loc>${siteUrl}/${cleanSlug}</loc>\n`;
+        xml += `    <loc>${siteUrl}/app/${cleanSlug}</loc>\n`;
         xml += `    <lastmod>${app.lastmod}</lastmod>\n`;
         xml += `    <changefreq>weekly</changefreq>\n`;
         xml += `    <priority>0.8</priority>\n`;

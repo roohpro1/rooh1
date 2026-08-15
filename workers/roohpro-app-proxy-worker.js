@@ -84,15 +84,37 @@ export default {
         }
       }
 
-      // Check for SPA HTML Navigation Fallback if origin returned 404
+      // 1. If 404 occurs on an asset or page, attempt fallback to root origin path (e.g. /app/assets/foo -> /assets/foo)
+      if (originResponse.status === 404 && method === "GET") {
+        const altPath = url.pathname.replace(/^\/app\/?/, "/") || "/";
+        if (altPath !== url.pathname) {
+          const fallbackUrl = new URL(targetUrl.toString());
+          fallbackUrl.pathname = altPath;
+          try {
+            const fallbackRes = await fetch(fallbackUrl.toString(), {
+              method: "GET",
+              headers,
+            });
+            if (fallbackRes.ok || fallbackRes.status < 400) {
+              originResponse = fallbackRes;
+            }
+          } catch (_) {}
+        }
+      }
+
+      // 2. Check for SPA HTML Navigation Fallback if origin still returned 404 on clean HTML sub-path
       const isHtmlReq = (request.headers.get("accept") || "").includes("text/html") || !url.pathname.includes(".");
       if (originResponse.status === 404 && isHtmlReq && method === "GET") {
-        const fallbackUrl = new URL(targetUrl.toString());
-        fallbackUrl.pathname = "/app";
+        const spaFallbackUrl = new URL(targetUrl.toString());
+        spaFallbackUrl.pathname = "/app";
         try {
-          const fallbackRes = await fetch(fallbackUrl.toString(), { method: "GET", headers });
-          if (fallbackRes.ok) {
-            originResponse = fallbackRes;
+          let spaRes = await fetch(spaFallbackUrl.toString(), { method: "GET", headers });
+          if (!spaRes.ok) {
+            spaFallbackUrl.pathname = "/index.html";
+            spaRes = await fetch(spaFallbackUrl.toString(), { method: "GET", headers });
+          }
+          if (spaRes.ok) {
+            originResponse = spaRes;
           }
         } catch (_) {}
       }
