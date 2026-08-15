@@ -1697,31 +1697,31 @@ export default function App() {
       const cleanPath = pathname.replace(/\/+$/, "");
 
       // Check home route first
-      if (pathname === "/" || pathname === "" || cleanPath === "/app" || cleanPath === "" || cleanPath === "/index.html") {
+      if (cleanPath === "/app" || cleanPath === "" || pathname === "/" || pathname === "" || cleanPath === "/index.html") {
         setCurrentView("home");
         setSelectedAppId(null);
         return;
       }
 
-      if (pathname === "/admin" || cleanPath === "/admin" || cleanPath === "/app/admin" || hash === "#/admin") {
+      if (cleanPath === "/app/admin" || cleanPath === "/admin" || hash === "#/admin") {
         setCurrentView("admin");
         return;
       }
 
-      if (pathname === "/privacy" || cleanPath === "/privacy" || cleanPath === "/app/privacy" || hash === "#/privacy") {
+      if (cleanPath === "/app/privacy" || cleanPath === "/privacy" || hash === "#/privacy") {
         setCurrentView("privacy");
         return;
       }
 
       let reviewSlugOrId = "";
-      if (pathname.startsWith("/review/")) {
-        reviewSlugOrId = decodeURIComponent(pathname.replace("/review/", ""));
-      } else if (pathname.startsWith("/app/")) {
+      if (pathname.startsWith("/app/")) {
         reviewSlugOrId = decodeURIComponent(pathname.replace("/app/", ""));
-      } else if (hash.startsWith("#/review/")) {
-        reviewSlugOrId = decodeURIComponent(hash.replace("#/review/", ""));
+      } else if (pathname.startsWith("/review/")) {
+        reviewSlugOrId = decodeURIComponent(pathname.replace("/review/", ""));
       } else if (hash.startsWith("#/app/")) {
         reviewSlugOrId = decodeURIComponent(hash.replace("#/app/", ""));
+      } else if (hash.startsWith("#/review/")) {
+        reviewSlugOrId = decodeURIComponent(hash.replace("#/review/", ""));
       } else if (
         pathname !== "/" &&
         pathname !== "/admin" &&
@@ -1790,19 +1790,19 @@ export default function App() {
       }
     } else if (view === "admin") {
       setCurrentView("admin");
-      if (window.location.pathname !== "/app/admin" && window.location.pathname !== "/admin") {
+      if (window.location.pathname !== "/app/admin") {
         window.history.pushState({}, "", "/app/admin");
       }
     } else if (view === "privacy") {
       setCurrentView("privacy");
-      if (window.location.pathname !== "/app/privacy" && window.location.pathname !== "/privacy") {
+      if (window.location.pathname !== "/app/privacy") {
         window.history.pushState({}, "", "/app/privacy");
       }
     } else {
       setCurrentView("home");
       setSelectedAppId(null);
       if (window.location.pathname !== "/app" && window.location.pathname !== "/app/") {
-        window.history.pushState({}, "", "/app/");
+        window.history.pushState({}, "", "/app");
       }
     }
 
