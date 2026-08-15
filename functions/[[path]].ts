@@ -19,7 +19,8 @@ export async function onRequest(context: {
     !hostname.includes("127.0.0.1") &&
     !hostname.includes("roohpro.com")
   ) {
-    const targetCanonicalUrl = `https://roohpro.com${pathname}${url.search}`;
+    const targetPath = pathname === "/" || pathname === "" ? "/app" : pathname;
+    const targetCanonicalUrl = `https://roohpro.com${targetPath}${url.search}`;
     return new Response(null, {
       status: 301,
       headers: {

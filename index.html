@@ -10,7 +10,11 @@
         try {
           var h = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
           if (h && (h.indexOf('pages.dev') !== -1 || h.indexOf('workers.dev') !== -1) && h.indexOf('roohpro.com') === -1) {
-            window.location.replace('https://roohpro.com' + window.location.pathname + window.location.search + window.location.hash);
+            var p = window.location.pathname || '';
+            if (p === '/' || p === '') {
+              p = '/app';
+            }
+            window.location.replace('https://roohpro.com' + p + window.location.search + window.location.hash);
           }
         } catch (_) {}
       })();
