@@ -21,8 +21,8 @@ database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
 
 # --- المتغيرات ---
 [vars]
-SITE_URL = "https://roohpro.com"
-SITE_BASE_URL = "https://roohpro.com"
+SITE_URL = "https://roohpro.com/pro"
+SITE_BASE_URL = "https://roohpro.com/pro"
 ADMIN_EMAIL = "rooh10dodo@gmail.com"
 ADMIN_PASSWORD = "5030775"
 FIREBASE_PROJECT_ID = "ai-studio-7294fa8a-5970-449a-b8f3-b4a4511fcbc2"
