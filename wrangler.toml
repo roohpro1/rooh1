@@ -46,7 +46,3 @@ SITE_BASE_URL = "https://roohpro.com"
 ADMIN_EMAIL = "rooh10dodo@gmail.com"
 ADMIN_PASSWORD = "5030775"
 FIREBASE_PROJECT_ID = "ai-studio-7294fa8a-5970-449a-b8f3-b4a4511fcbc2"
-
-# --- المراقبة ---
-[observability]
-enabled = true
