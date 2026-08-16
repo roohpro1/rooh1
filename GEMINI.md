@@ -42,3 +42,13 @@
   2. خريطة الموقع `sitemap.xml`: تولد برمجياً وديناميكياً بالقراءة المباشرة من `approved-apps.json`.
   3. عند دخول الزائر للرابط `https://roohpro.com/app/clean-slug`، يجلب الموقع محتوى الـ HTML مباشرة من R2 (`clean-slug.html`) ويعرضه للزائر دون استهلاك أي قراءات من Firebase.
 
+## 5. معمارية التوجيه والبروكسي العكسي (Reverse Proxy & Routing Architecture)
+- **فصل النطاقات والمشاريع (Split Architecture)**:
+  1. **الموقع الرئيسي (Main Site)**: يعمل على النطاق الأساسي `https://roohpro.com/` ومخصص للواجهة العامة للموقع والمقالات.
+  2. **تطبيق المنصة (App Origin)**: يعمل على مشروع Cloudflare Pages مستقل `https://rooh1.pages.dev/`.
+  3. **البروكسي العكسي الموحد (Reverse Proxy Worker)**:
+     - يتم ربطه في Cloudflare بالمسار (Route): `roohpro.com/app*`.
+     - يستقبل كافة الطلبات الواردة إلى `https://roohpro.com/app` و `https://roohpro.com/app/*` ويجلب المحتوى من `https://rooh1.pages.dev` في الخلفية.
+     - **ثبات الرابط في المتصفح**: يبقى العنوان في المتصفح ثابتاً تماماً `https://roohpro.com/app` دون عمل Redirect ظاهر للمستخدم.
+     - **إعادة توجيه المسارات والأصول**: يدعم مسارات الأصول `/app/assets/*` وطلبات الـ API `/api/*` والتنقل الداخلي للـ SPA.
+     - **حظر التحويل الحلقي (Redirect Loop Prevention)**: تمرير ترويسات `X-Forwarded-Host: roohpro.com` و `X-Reverse-Proxy: roohpro-app-proxy` لمنع إعادة توجيه الطلبات الواردة من البروكسي.
