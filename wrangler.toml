@@ -2,9 +2,6 @@ name = "rooh1"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
 
-[assets]
-directory = "./dist"
-
 # --- التخزين (KV) ---
 [[kv_namespaces]]
 binding = "ROOH_KV"
