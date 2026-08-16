@@ -1,18 +1,6 @@
-const CACHE_NAME = 'rooh-pwa-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.json',
-  '/app-logo.png',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
-];
+const CACHE_NAME = 'rooh-pwa-v2';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
   self.skipWaiting();
 });
 
@@ -20,34 +8,36 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
+        cacheNames.map((cache) => caches.delete(cache))
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   
-  // Network first, falling back to cache
+  const url = new URL(event.request.url);
+  // Never intercept API, admin, or cross-origin requests
+  if (url.pathname.startsWith('/api') || !url.origin.includes(self.location.origin)) {
+    return;
+  }
+
+  // Network-first with guaranteed Response return
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        // If offline and requesting an HTML document, return a basic offline response
+        if (event.request.headers.get('accept')?.includes('text/html')) {
+          return new Response(
+            '<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>منصة روح</title></head><body style="font-family:sans-serif;text-align:center;padding:50px;"><h2>تعذر الاتصال بالشبكة</h2><p>يرجى التحقق من اتصالك بالإنترنت ثم إعادة المحاولة.</p><button onclick="location.reload()" style="padding:10px 20px;border-radius:8px;cursor:pointer;">إعادة المحاولة</button></body></html>',
+            { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 200 }
+          );
         }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
+        return new Response('Network error occurred', { status: 503, statusText: 'Service Unavailable' });
       })
   );
 });
+

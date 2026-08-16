@@ -6,12 +6,13 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { initPwaInstaller } from './lib/pwaInstaller.ts';
 import './index.css';
 
-// Initialize PWA Installation Listener & ServiceWorker
+// Initialize PWA Installation Listener & ServiceWorker cleanly
 if (typeof window !== "undefined") {
   initPwaInstaller();
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js').catch((err) => {
+      const swUrl = `${import.meta.env.BASE_URL || '/'}sw.js`;
+      navigator.serviceWorker.register(swUrl).catch((err) => {
         console.warn('[PWA] ServiceWorker registration note:', err);
       });
     });
