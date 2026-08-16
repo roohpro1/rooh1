@@ -62,7 +62,9 @@ export async function onRequest(context: {
       }
       const contentType = assetRes?.headers?.get("content-type") || "";
       if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-        return assetRes;
+        const h = new Headers(assetRes.headers);
+        h.set("Access-Control-Allow-Origin", "*");
+        return new Response(assetRes.body, { status: assetRes.status, headers: h });
       }
     }
     if (typeof context.next === "function") {
@@ -70,7 +72,9 @@ export async function onRequest(context: {
         const nextRes = await context.next();
         const contentType = nextRes?.headers?.get("content-type") || "";
         if (nextRes && nextRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-          return nextRes;
+          const h = new Headers(nextRes.headers);
+          h.set("Access-Control-Allow-Origin", "*");
+          return new Response(nextRes.body, { status: nextRes.status, headers: h });
         }
       } catch (_) {}
     }
@@ -81,7 +85,8 @@ export async function onRequest(context: {
         status: 404,
         headers: {
           "Content-Type": isJs ? "application/javascript; charset=utf-8" : "text/css; charset=utf-8",
-          "Cache-Control": "no-cache"
+          "Cache-Control": "no-cache",
+          "Access-Control-Allow-Origin": "*"
         }
       });
     }
