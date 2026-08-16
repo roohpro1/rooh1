@@ -4,22 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
     
-    <!-- Immediate Canonical Domain Enforcement: Redirect *.pages.dev to official domain https://roohpro.com -->
-    <script>
-      (function() {
-        try {
-          var h = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
-          if (h && (h.indexOf('pages.dev') !== -1 || h.indexOf('workers.dev') !== -1) && h.indexOf('roohpro.com') === -1) {
-            var p = window.location.pathname || '';
-            if (p === '/' || p === '') {
-              p = '/app';
-            }
-            window.location.replace('https://roohpro.com' + p + window.location.search + window.location.hash);
-          }
-        } catch (_) {}
-      })();
-    </script>
-
+    <!-- Canonical Domain & Meta Configuration -->
     <meta name="google-site-verification" content="cfO0cT3RxokPNPjZG6skstyCj8B_rWhpwFzCJhvRN9o" />
     <meta name="google-site-verification" content="7fsdQPjU3rkZuDSMnKpu1XN2oQp_kfSOVGsR-_HCRdc" />
     <title>دليل ومراجع التطبيقات والألعاب الموثوقة | منصة روح</title>
