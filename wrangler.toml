@@ -1,6 +1,7 @@
 name = "rooh1"
 pages_build_output_dir = "dist"
 compatibility_date = "2024-09-01"
+compatibility_flags = ["nodejs_compat"]
 
 # --- التخزين (KV) ---
 [[kv_namespaces]]
@@ -9,33 +10,12 @@ id = "6d9110610f2c45b09c15d3f2f5dee50a"
 
 # --- التخزين (R2) ---
 [[r2_buckets]]
-binding = "ROOH_BUCKET"
-bucket_name = "roohme"
-
-[[r2_buckets]]
-binding = "R2_BUCKET"
-bucket_name = "roohme"
-
-[[r2_buckets]]
-binding = "ROOH_R2"
-bucket_name = "roohme"
-
-[[r2_buckets]]
 binding = "roohme"
-bucket_name = "roohme"
-
-[[r2_buckets]]
-binding = "REVIEWS_BUCKET"
 bucket_name = "roohme"
 
 # --- قواعد البيانات (D1) ---
 [[d1_databases]]
 binding = "h"
-database_name = "h"
-database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
-
-[[d1_databases]]
-binding = "DB"
 database_name = "h"
 database_id = "8480585e-443f-4ef9-b4e4-45c941c9dbf1"
 
