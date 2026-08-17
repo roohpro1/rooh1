@@ -1,9 +1,6 @@
-# 1. السماح بمرور ملفات الـ Assets الخاصة بـ /app بدون تغيير
-/app/assets/*  /app/assets/:splat  200
-
-# 2. توجيه جميع مسارات تطبيق /app الداخلية إلى index.html الخاص بالتطبيق
-/app/*         /index.html         200
-/app           /index.html         200
-
-# 3. توجيه مسارات التطبيق الرئيسي (مع استثناء الملفات التي تحتوي على امتدادات مثل .js, .css, .png)
-/*             /index.html         200
+# Single-Page Application (SPA) routing for Cloudflare Pages
+# Direct all client-side navigation paths to the single entry point index.html
+/app/assets/* /assets/:splat 200
+/app/* /index.html 200
+/app /index.html 200
+/* /index.html 200

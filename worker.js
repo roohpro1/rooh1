@@ -174,40 +174,22 @@ var sitemap_default = {
         ];
         publishedApps = seedSlugs.map((s) => ({ slug: s, lastmod: (/* @__PURE__ */ new Date()).toISOString().split("T")[0] }));
       }
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-`;
-      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-      xml += `  <url>
-    <loc>${siteUrl}/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-`;
-      xml += `  <url>
-    <loc>${siteUrl}/privacy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-`;
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      xml += `  <url>\n    <loc>${siteUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${siteUrl}/privacy</loc>\n    <changefreq>monthly</changefreq>\n    <priority>0.3</priority>\n  </url>\n`;
       const seenSlugs = /* @__PURE__ */ new Set();
       for (const app of publishedApps) {
         const cleanSlug = app.slug.replace(/^\/+|\.html$/gi, "").trim();
         if (!cleanSlug || seenSlugs.has(cleanSlug))
           continue;
         seenSlugs.add(cleanSlug);
-        xml += `  <url>
-`;
-        xml += `    <loc>${siteUrl}/${cleanSlug}</loc>
-`;
-        xml += `    <lastmod>${app.lastmod}</lastmod>
-`;
-        xml += `    <changefreq>weekly</changefreq>
-`;
-        xml += `    <priority>0.8</priority>
-`;
-        xml += `  </url>
-`;
+        xml += `  <url>\n`;
+        xml += `    <loc>${siteUrl}/${cleanSlug}</loc>\n`;
+        xml += `    <lastmod>${app.lastmod}</lastmod>\n`;
+        xml += `    <changefreq>weekly</changefreq>\n`;
+        xml += `    <priority>0.8</priority>\n`;
+        xml += `  </url>\n`;
       }
       xml += `</urlset>`;
       response = new Response(xml, {
@@ -241,9 +223,12 @@ var renderer_default = {
     } else if (pathname !== "/" && !pathname.includes(".")) {
       slug = pathname.replace("/", "").trim();
     }
+    
+    // إصلاح: إرجاع null بدلاً من fetch(request) لتفادي الحلقة المفرغة (Infinite Loop)
     if (!slug) {
-      return fetch(request);
+      return null;
     }
+    
     const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const cacheKey = new Request(url.toString(), request);
     const cache = caches.default;
@@ -268,23 +253,12 @@ var renderer_default = {
           }
         }
       }
+      
+      // إصلاح: إذا لم نعثر على مراجعة في R2، نرجع null ليتسنى للموجه الرئيسي فتح الواجهة SPA
       if (!object) {
-        return new Response(
-          `<!DOCTYPE html>
-           <html dir="rtl" lang="ar">
-           <head><meta charset="UTF-8"><title>\u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629 \u063A\u064A\u0631 \u0645\u0648\u062C\u0648\u062F\u0629 | \u0645\u0648\u0642\u0639 \u0645\u0631\u0627\u062C\u0639 \u0627\u0644\u062A\u0637\u0628\u064A\u0642\u0627\u062A</title></head>
-           <body style="font-family:sans-serif; text-align:center; padding:50px; background:#f8fafc;">
-             <h2>\u0639\u0630\u0631\u0627\u064B\u060C \u0644\u0645 \u064A\u062A\u0645 \u0627\u0644\u0639\u062B\u0648\u0631 \u0639\u0644\u0649 \u0645\u0631\u0627\u062C\u0639\u0629 \u0647\u0630\u0627 \u0627\u0644\u062A\u0637\u0628\u064A\u0642! \u{1F50D}</h2>
-             <p>\u0642\u062F \u062A\u0643\u0648\u0646 \u0627\u0644\u0645\u0631\u0627\u062C\u0639\u0629 \u0645\u0627 \u0632\u0627\u0644\u062A \u0642\u064A\u062F \u0627\u0644\u062A\u0648\u0644\u064A\u062F \u0623\u0648 \u062A\u0645 \u0646\u0642\u0644\u0647\u0627.</p>
-             <a href="/" style="color:#2563eb; text-decoration:underline;">\u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u0644\u0635\u0641\u062D\u0629 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629</a>
-           </body>
-           </html>`,
-          {
-            status: 404,
-            headers: { "Content-Type": "text/html; charset=utf-8" }
-          }
-        );
+        return null;
       }
+      
       const htmlBody = await object.text();
       const headers = new Headers();
       object.writeHttpMetadata(headers);
@@ -306,6 +280,8 @@ var renderer_default = {
 
 // workers/index.ts
 var STATIC_ASSET_REGEX = /\.(js|css|png|jpg|jpeg|gif|svg|json|ico|woff2?|ttf|eot|map|webp)$/i;
+var RESERVED_PATHS = ["/privacy", "/robots.txt", "/sitemap.xml", "/approved-apps.json"];
+
 var workers_default = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -376,12 +352,9 @@ var workers_default = {
           headers: { "Content-Type": "text/plain; charset=utf-8" }
         });
       }
-      if ((path === "/robots.txt" || path === "/robots.txt/") && method === "GET") {
-        const txt = `User-agent: *
-Allow: /
 
-Sitemap: https://roohpro.com/sitemap.xml
-`;
+      if ((path === "/robots.txt" || path === "/robots.txt/") && method === "GET") {
+        const txt = `User-agent: *\nAllow: /\n\nSitemap: https://roohpro.com/sitemap.xml\n`;
         return new Response(txt, {
           status: 200,
           headers: {
@@ -390,16 +363,19 @@ Sitemap: https://roohpro.com/sitemap.xml
           }
         });
       }
+
       if (path === "/api/upload-review" && method === "POST") {
         if (uploader_default && typeof uploader_default.fetch === "function") {
           return await uploader_default.fetch(request, env, ctx);
         }
       }
+
       if (path === "/sitemap.xml" && method === "GET") {
         if (sitemap_default && typeof sitemap_default.fetch === "function") {
           return await sitemap_default.fetch(request, env, ctx);
         }
       }
+
       if ((path === "/approved-apps.json" || path === "/api/approved-apps") && method === "GET") {
         try {
           let approvedData = null;
@@ -425,6 +401,7 @@ Sitemap: https://roohpro.com/sitemap.xml
           });
         }
       }
+
       if ((path === "/approved-apps.json" || path === "/api/approved-apps") && method === "POST") {
         const body = await request.text();
         if (env.ROOH_KV) {
@@ -441,6 +418,7 @@ Sitemap: https://roohpro.com/sitemap.xml
           headers: { "Content-Type": "application/json" }
         });
       }
+
       if (path.startsWith("/api/page/") && method === "GET") {
         const pageName = path.replace("/api/page/", "");
         const r2Bucket = env.ROOH_BUCKET || env.R2_BUCKET || env.ROOH_R2 || env.roohme;
@@ -458,12 +436,14 @@ Sitemap: https://roohpro.com/sitemap.xml
           headers: { "Content-Type": "application/json" }
         });
       }
+
       if (path === "/api/keys" && method === "GET") {
         const keys = env.ROOH_KV ? await env.ROOH_KV.get("AI_KEYS_LIST") || "[]" : "[]";
         return new Response(keys, {
           headers: { "Content-Type": "application/json" }
         });
       }
+
       if (path === "/api/keys" && method === "POST") {
         const body = await request.json();
         if (env.ROOH_KV) {
@@ -474,11 +454,17 @@ Sitemap: https://roohpro.com/sitemap.xml
           headers: { "Content-Type": "application/json" }
         });
       }
-      if (method === "GET" && path.startsWith("/review/")) {
+
+      // إصلاح: تجربة جلب صفحة المراجعة من R2 أولاً لمسارات /review/ أو المسارات الديناميكية
+      if (method === "GET" && path !== "/" && !RESERVED_PATHS.includes(path) && !path.startsWith("/api/")) {
         if (renderer_default && typeof renderer_default.fetch === "function") {
-          return await renderer_default.fetch(request, env, ctx);
+          const renderedRes = await renderer_default.fetch(request, env, ctx);
+          if (renderedRes) {
+            return renderedRes;
+          }
         }
       }
+
       const isHtmlNavRequest = acceptHeader.includes("text/html") || !path.includes(".");
       if (isHtmlNavRequest && env.ASSETS && typeof env.ASSETS.fetch === "function") {
         try {
@@ -494,6 +480,7 @@ Sitemap: https://roohpro.com/sitemap.xml
         } catch (e) {
         }
       }
+
       return new Response(JSON.stringify({
         status: "Rooh Platform Cloudflare Worker active",
         message: "All systems running successfully"
@@ -512,6 +499,7 @@ Sitemap: https://roohpro.com/sitemap.xml
     }
   }
 };
+
 export {
   workers_default as default
 };

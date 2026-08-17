@@ -11,7 +11,8 @@ if (typeof window !== "undefined") {
   initPwaInstaller();
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      const swUrl = `${import.meta.env.BASE_URL || '/'}sw.js`;
+      const baseUrl = ((import.meta as any)?.env?.BASE_URL) || '/';
+      const swUrl = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}sw.js`;
       navigator.serviceWorker.register(swUrl).catch((err) => {
         console.warn('[PWA] ServiceWorker registration note:', err);
       });
