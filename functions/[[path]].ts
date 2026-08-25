@@ -7,66 +7,34 @@ export async function onRequest(context: {
   waitUntil: (p: Promise<any>) => void;
 }): Promise<Response> {
   const url = new URL(context.request.url);
-  const hostname = url.hostname.toLowerCase();
   const pathname = url.pathname;
 
-  // 1. Static Asset handling (high priority for JS, CSS, images, etc.)
-  const isJsOrCss = /\.(js|css)$/i.test(pathname);
+  // 1. Static Assets (JS, CSS, images, icons, fonts) -> Let Cloudflare Pages Edge serve directly
   const isStaticAsset =
-    isJsOrCss ||
-    pathname.includes("/assets/") ||
+    pathname.startsWith("/assets/") ||
     pathname.startsWith("/app/assets/") ||
-    /\.(png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml|webp|avif|wasm)$/i.test(pathname);
+    /\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff|woff2|ttf|eot|map|txt|xml|webp|avif|wasm)$/i.test(pathname);
 
-  // 2. Static Asset handling:
   if (isStaticAsset) {
-    if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
-      let assetRes: Response | null = null;
-      if (pathname.startsWith("/app/")) {
-        const strippedPath = pathname.replace(/^\/app/, "");
-        const assetReq = new Request(new URL(strippedPath, context.request.url), context.request);
-        try {
-          assetRes = await context.env.ASSETS.fetch(assetReq);
-        } catch (_) {}
-      }
-      if (!assetRes || assetRes.status === 404) {
-        try {
-          assetRes = await context.env.ASSETS.fetch(context.request);
-        } catch (_) {}
-      }
-      const contentType = assetRes?.headers?.get("content-type") || "";
-      if (assetRes && assetRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-        const h = new Headers(assetRes.headers);
-        h.set("Access-Control-Allow-Origin", "*");
-        return new Response(assetRes.body, { status: assetRes.status, headers: h });
-      }
-    }
     if (typeof context.next === "function") {
       try {
         const nextRes = await context.next();
-        const contentType = nextRes?.headers?.get("content-type") || "";
-        if (nextRes && nextRes.status < 400 && !(isJsOrCss && contentType.includes("text/html"))) {
-          const h = new Headers(nextRes.headers);
-          h.set("Access-Control-Allow-Origin", "*");
-          return new Response(nextRes.body, { status: nextRes.status, headers: h });
+        if (nextRes && nextRes.status < 400) {
+          return nextRes;
         }
       } catch (_) {}
     }
-    // Return explicit 404 with proper MIME type if asset is missing (prevent HTML fallback on scripts)
-    if (isJsOrCss) {
-      const isJs = /\.js$/i.test(pathname);
-      return new Response(`/* Asset ${pathname} not found */`, {
-        status: 404,
-        headers: {
-          "Content-Type": isJs ? "application/javascript; charset=utf-8" : "text/css; charset=utf-8",
-          "Cache-Control": "no-cache",
-          "Access-Control-Allow-Origin": "*"
+    if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
+      try {
+        const assetRes = await context.env.ASSETS.fetch(context.request);
+        if (assetRes && assetRes.status < 400) {
+          return assetRes;
         }
-      });
+      } catch (_) {}
     }
   }
 
-  // 3. Pass API, Sitemap, and Dynamic Review requests to the unified router
+  // 2. Pass API, Sitemap, and Dynamic Review requests to the unified router backend
   const isApiOrSpecial =
     pathname.startsWith("/api/") ||
     pathname === "/sitemap.xml" ||
@@ -79,34 +47,7 @@ export async function onRequest(context: {
     });
   }
 
-  // 4. Instant Main Portal Gateway Route (/app, /app/, /) -> Immediate SPA delivery
-  if (pathname === "/app" || pathname === "/app/" || pathname === "/" || pathname === "/index.html") {
-    if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
-      try {
-        const indexReq = new Request(new URL("/index.html", context.request.url), context.request);
-        const indexRes = await context.env.ASSETS.fetch(indexReq);
-        if (indexRes && indexRes.status < 400) {
-          const headers = new Headers(indexRes.headers);
-          headers.set("Content-Type", "text/html; charset=utf-8");
-          headers.set("Cache-Control", "public, max-age=0, must-revalidate");
-          return new Response(indexRes.body, {
-            status: 200,
-            headers
-          });
-        }
-      } catch (_) {}
-    }
-    if (typeof context.next === "function") {
-      try {
-        const nextRes = await context.next();
-        if (nextRes && nextRes.status < 400) {
-          return nextRes;
-        }
-      } catch (_) {}
-    }
-  }
-
-  // 5. Try resolving pre-rendered R2 HTML review for article paths (/app/:slug, /:slug)
+  // 3. Try resolving pre-rendered R2 HTML review for article paths (/app/:slug, /:slug)
   if (context.request.method === "GET" && pathname.length > 1 && !pathname.startsWith("/assets/")) {
     const bucket =
       context.env?.roohme ||
@@ -136,7 +77,8 @@ export async function onRequest(context: {
               status: 200,
               headers: {
                 "Content-Type": "text/html; charset=utf-8",
-                "Cache-Control": "public, max-age=3600, s-maxage=86400"
+                "Cache-Control": "public, max-age=3600, s-maxage=86400",
+                "Access-Control-Allow-Origin": "*"
               }
             });
           }
@@ -145,23 +87,7 @@ export async function onRequest(context: {
     }
   }
 
-  // 6. Default Route -> Deliver the real built index.html from Cloudflare Pages ASSETS
-  if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
-    try {
-      const indexReq = new Request(new URL("/index.html", context.request.url), context.request);
-      const indexRes = await context.env.ASSETS.fetch(indexReq);
-      if (indexRes && indexRes.status < 400) {
-        const headers = new Headers(indexRes.headers);
-        headers.set("Content-Type", "text/html; charset=utf-8");
-        headers.set("Cache-Control", "public, max-age=0, must-revalidate");
-        return new Response(indexRes.body, {
-          status: 200,
-          headers
-        });
-      }
-    } catch (_) {}
-  }
-
+  // 4. Main Portal Gateway & All Client Routes -> Deliver the real built index.html via context.next()
   if (typeof context.next === "function") {
     try {
       const nextRes = await context.next();
@@ -171,8 +97,26 @@ export async function onRequest(context: {
     } catch (_) {}
   }
 
+  if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
+    try {
+      const indexReq = new Request(new URL("/index.html", context.request.url), context.request);
+      const indexRes = await context.env.ASSETS.fetch(indexReq);
+      if (indexRes && indexRes.status < 400) {
+        const headers = new Headers(indexRes.headers);
+        headers.set("Content-Type", "text/html; charset=utf-8");
+        headers.set("Cache-Control", "public, max-age=0, must-revalidate");
+        headers.set("Access-Control-Allow-Origin", "*");
+        return new Response(indexRes.body, {
+          status: 200,
+          headers
+        });
+      }
+    } catch (_) {}
+  }
+
   // Fallback to unified router
   return handleUnifiedCloudflareRequest(context.request, context.env, {
     waitUntil: (p: Promise<any>) => context.waitUntil(p)
   });
 }
+

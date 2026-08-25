@@ -31,5 +31,6 @@
 # Global security and caching headers
 /*
   X-Content-Type-Options: nosniff
-  X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
+  Access-Control-Allow-Origin: *
+
