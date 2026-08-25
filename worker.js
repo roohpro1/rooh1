@@ -290,23 +290,6 @@ var workers_default = {
     const method = request.method;
     const acceptHeader = request.headers.get("accept") || "";
 
-    if (
-      (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
-      !hostname.includes("localhost") &&
-      !hostname.includes("127.0.0.1") &&
-      !hostname.includes("roohpro.com")
-    ) {
-      const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
-      return new Response(null, {
-        status: 301,
-        headers: {
-          Location: targetCanonicalUrl,
-          "Cache-Control": "public, max-age=86400",
-          "X-Robots-Tag": "noindex, nofollow"
-        }
-      });
-    }
-
     try {
       const isStaticAsset = STATIC_ASSET_REGEX.test(path) || path.startsWith("/app/assets/") || path.startsWith("/assets/");
       if (isStaticAsset) {

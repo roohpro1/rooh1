@@ -713,31 +713,6 @@ export async function handleUnifiedCloudflareRequest(
   const bucket = getBucket(env);
   const d1 = getD1(env);
 
-  // 0. Canonical Domain 301 Redirect for *.pages.dev and *.workers.dev
-  // If request is proxied internally via Reverse Proxy (X-Forwarded-Host or X-Reverse-Proxy), serve content directly without redirecting.
-  const isFromProxy =
-    request.headers.get("x-forwarded-host")?.includes("roohpro.com") ||
-    request.headers.get("x-reverse-proxy") !== null ||
-    request.headers.get("x-from-proxy") !== null;
-
-  if (
-    !isFromProxy &&
-    (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
-    !hostname.includes("localhost") &&
-    !hostname.includes("127.0.0.1") &&
-    !hostname.includes("roohpro.com")
-  ) {
-    const targetCanonicalUrl = `https://roohpro.com${path}${url.search}`;
-    return new Response(null, {
-      status: 301,
-      headers: {
-        Location: targetCanonicalUrl,
-        "Cache-Control": "public, max-age=86400",
-        "X-Robots-Tag": "noindex, nofollow"
-      }
-    });
-  }
-
   // Preflight CORS
   if (method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });

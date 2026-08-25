@@ -10,33 +10,7 @@ export async function onRequest(context: {
   const hostname = url.hostname.toLowerCase();
   const pathname = url.pathname;
 
-  // 1. Canonical Domain Redirection:
-  // If accessed directly via *.pages.dev or *.workers.dev, 301 redirect to primary custom domain https://roohpro.com
-  // If request is proxied internally via Reverse Proxy (X-Forwarded-Host or X-Reverse-Proxy), serve content directly without redirecting.
-  const isFromProxy =
-    context.request.headers.get("x-forwarded-host")?.includes("roohpro.com") ||
-    context.request.headers.get("x-reverse-proxy") !== null ||
-    context.request.headers.get("x-from-proxy") !== null;
-
-  if (
-    !isFromProxy &&
-    (hostname.endsWith(".pages.dev") || hostname.endsWith(".workers.dev")) &&
-    !hostname.includes("localhost") &&
-    !hostname.includes("127.0.0.1") &&
-    !hostname.includes("roohpro.com")
-  ) {
-    const targetPath = pathname === "/" || pathname === "" ? "/app" : pathname;
-    const targetCanonicalUrl = `https://roohpro.com${targetPath}${url.search}`;
-    return new Response(null, {
-      status: 301,
-      headers: {
-        Location: targetCanonicalUrl,
-        "Cache-Control": "public, max-age=86400",
-        "X-Robots-Tag": "noindex, nofollow"
-      }
-    });
-  }
-
+  // 1. Static Asset handling (high priority for JS, CSS, images, etc.)
   const isJsOrCss = /\.(js|css)$/i.test(pathname);
   const isStaticAsset =
     isJsOrCss ||
