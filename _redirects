@@ -1,2 +1,1 @@
-# Static Asset Rewrites
-/app/assets/* /assets/:splat 200
+
