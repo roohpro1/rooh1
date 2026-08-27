@@ -122,19 +122,56 @@ function getAppHtmlShell(siteBase: string, pageTitle?: string, appSlug?: string)
 <html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
     <title>${title}</title>
-    <meta name="description" content="منصة روح المحترفة - دليل شامل واستعراض تحليلي معزز بالذكاء الاصطناعي لجميع التطبيقات والألعاب." />
+    <meta name="description" content="منصة روح - وجهتك الموثوقة الأولى لاستكشاف، مراجعة، وتقييم أحدث التطبيقات والألعاب لأجهزة الأندرويد والآيفون وتحميلها بروابط مباشرة وآمنة 100%." />
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/app/app-logo.png" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/assets/index.js"></script>
-    <link rel="stylesheet" href="/assets/index.css">
+    <style>
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #fef2f2 100%);
+        z-index: 999999;
+        font-family: system-ui, -apple-system, sans-serif;
+        direction: rtl;
+      }
+      .red-spinner {
+        width: 54px;
+        height: 54px;
+        border: 4px solid #fee2e2;
+        border-top: 4px solid #dc2626;
+        border-right: 4px solid #ef4444;
+        border-radius: 50%;
+        animation: spin-pulse 0.9s linear infinite;
+        box-shadow: 0 0 15px rgba(220, 38, 38, 0.25);
+      }
+      @keyframes spin-pulse {
+        0% { transform: rotate(0deg) scale(1); }
+        50% { transform: rotate(180deg) scale(1.05); }
+        100% { transform: rotate(360deg) scale(1); }
+      }
+    </style>
+    <script type="module" crossorigin src="/app/assets/index-B2fn6Z3r.js"></script>
+    <link rel="stylesheet" crossorigin href="/app/assets/index-Bosk63Nt.css">
   </head>
   <body class="bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-200 min-h-screen">
-    <div id="root"></div>
+    <div id="root">
+      <div id="initial-loader">
+        <div class="red-spinner"></div>
+        <p style="margin-top: 18px; font-weight: 900; font-size: 15px; color: #1e293b; letter-spacing: -0.2px;">
+          جاري تجهيز منصة روح الذكية...
+        </p>
+      </div>
+    </div>
   </body>
 </html>`;
 }
