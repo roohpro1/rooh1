@@ -151,6 +151,44 @@ Sitemap: https://roohpro.com/sitemap.xml
   }
 }
 
+function mirrorAppAssets() {
+  const distDir = path.join(__dirname, 'dist');
+  const srcAssets = path.join(distDir, 'assets');
+  const destAppAssets = path.join(distDir, 'app', 'assets');
+
+  if (fs.existsSync(srcAssets)) {
+    try {
+      fs.mkdirSync(destAppAssets, { recursive: true });
+      fs.cpSync(srcAssets, destAppAssets, { recursive: true });
+      console.log('Successfully mirrored dist/assets to dist/app/assets for seamless cross-path resolution.');
+    } catch (e) {
+      console.warn('Notice mirroring assets:', e.message);
+    }
+  }
+
+  const distIndex = path.join(distDir, 'index.html');
+  const destAppIndex = path.join(distDir, 'app', 'index.html');
+  if (fs.existsSync(distIndex)) {
+    try {
+      fs.mkdirSync(path.dirname(destAppIndex), { recursive: true });
+      fs.copyFileSync(distIndex, destAppIndex);
+      console.log('Successfully copied dist/index.html to dist/app/index.html.');
+    } catch (e) {
+      console.warn('Notice copying app index.html:', e.message);
+    }
+  }
+
+  const rootRedirects = path.join(__dirname, '_redirects');
+  const distRedirects = path.join(distDir, '_redirects');
+  if (fs.existsSync(rootRedirects)) {
+    try {
+      fs.copyFileSync(rootRedirects, distRedirects);
+      console.log('Successfully copied _redirects to dist/_redirects.');
+    } catch (_) {}
+  }
+}
+
 writeRobotsTxt();
+mirrorAppAssets();
 fetchAndSaveSitemap();
 

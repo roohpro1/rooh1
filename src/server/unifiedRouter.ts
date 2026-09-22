@@ -1255,7 +1255,26 @@ export async function handleUnifiedCloudflareRequest(
         const articleResponse = await resolveArticleHtml(cleanSlug, env);
         if (articleResponse) return articleResponse;
 
-        // Fallback to SPA Shell
+        // Fallback to real built SPA Shell if env.ASSETS is available
+        if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
+          try {
+            const indexReq = new Request(new URL("/index.html", request.url), request);
+            const indexRes = await env.ASSETS.fetch(indexReq);
+            if (indexRes && indexRes.status < 400) {
+              let html = await indexRes.text();
+              const pageTitle = `دليل ومراجعة شاملة لتطبيق ${cleanSlug} | منصة روح`;
+              const pageUrl = `${siteBase}/app/${cleanSlug}`;
+              html = html.replace(/<title>.*?<\/title>/i, `<title>${pageTitle}</title>`);
+              html = html.replace(/<link rel="canonical" href=".*?"/i, `<link rel="canonical" href="${pageUrl}"`);
+              const headers = new Headers(indexRes.headers);
+              headers.set("Content-Type", "text/html; charset=utf-8");
+              headers.set("Cache-Control", "public, max-age=300, must-revalidate");
+              return new Response(html, { status: 200, headers });
+            }
+          } catch (_) {}
+        }
+
+        // Fallback to embedded SPA Shell
         return new Response(getAppHtmlShell(siteBase, cleanSlug, cleanSlug), {
           status: 200,
           headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=300", ...corsHeaders }

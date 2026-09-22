@@ -181,8 +181,16 @@ async function startServer() {
     });
   } else {
     const distPath = path.join(process.cwd(), "dist");
+    app.use("/app/assets", express.static(path.join(distPath, "assets")));
+    app.use("/assets", express.static(path.join(distPath, "assets")));
+    app.use("/app", express.static(distPath));
     app.use(express.static(distPath));
+
     app.get("*", (req, res) => {
+      // Never send index.html for missing static asset requests to avoid script syntax errors
+      if (/\.(js|css|png|jpg|jpeg|gif|ico|svg|json|woff2?|map|wasm|txt|xml)$/i.test(req.path)) {
+        return res.status(404).send("Asset not found");
+      }
       const indexPath = path.join(distPath, "index.html");
       if (fs.existsSync(indexPath)) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");

@@ -24,7 +24,20 @@ export async function onRequest(context: {
         }
       } catch (_) {}
     }
+
     if (context.env?.ASSETS && typeof context.env.ASSETS.fetch === "function") {
+      // If requested with /app/assets/, rewrite to /assets/ so Cloudflare Pages ASSETS finds it
+      if (pathname.startsWith("/app/assets/")) {
+        const strippedPath = pathname.replace(/^\/app/, "");
+        try {
+          const strippedReq = new Request(new URL(strippedPath, context.request.url), context.request);
+          const assetRes = await context.env.ASSETS.fetch(strippedReq);
+          if (assetRes && assetRes.status < 400) {
+            return assetRes;
+          }
+        } catch (_) {}
+      }
+
       try {
         const assetRes = await context.env.ASSETS.fetch(context.request);
         if (assetRes && assetRes.status < 400) {
@@ -32,6 +45,9 @@ export async function onRequest(context: {
         }
       } catch (_) {}
     }
+
+    // Never return index.html for static script/style/asset requests to prevent MIME type mismatch errors
+    return new Response("Asset Not Found", { status: 404 });
   }
 
   // 2. Pass API, Sitemap, and Dynamic Review requests to the unified router backend
