@@ -3357,25 +3357,15 @@ export interface EnvConfigData {
   activeRotationMessage?: string;
 }
 
-export const DEFAULT_PROQ_GROQ_KEYS: KeyItem[] = [
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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",
-  "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"
-].map((k, idx) => ({
-  id: `key_groq_${idx + 1}`,
-  key: k,
-  label: `مفتاح Proq/Groq #${idx + 1}`,
-  status: "active" as const
-}));
+export const DEFAULT_PROQ_GROQ_KEYS: KeyItem[] = Array.from({ length: 12 }, (_, idx) => {
+  const envKey = idx === 0 && process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.trim() : "";
+  return {
+    id: `key_groq_${idx + 1}`,
+    key: envKey,
+    label: `مفتاح Proq/Groq #${idx + 1}`,
+    status: (envKey ? "active" : "unknown") as "active" | "unknown"
+  };
+});
 
 // Default 11 slots for ElevenLabs Voice API Keys with auto-rotation & quota failover
 export const DEFAULT_ELEVENLABS_KEYS: KeyItem[] = Array.from({ length: 11 }, (_, idx) => {
@@ -3507,7 +3497,18 @@ export async function saveSystemEnvConfigToFs(config: EnvConfigData): Promise<bo
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    fs.writeFileSync(LOCAL_CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
+    const sanitizedForDisk: EnvConfigData = {
+      ...config,
+      geminiKeys: (config.geminiKeys || []).map((k) => ({ ...k, key: "" })),
+      groqKeys: (config.groqKeys || []).map((k) => ({ ...k, key: "" })),
+      elevenlabsKeys: (config.elevenlabsKeys || []).map((k) => ({ ...k, key: "" })),
+      openaiKeys: (config.openaiKeys || []).map((k) => ({ ...k, key: "" })),
+      onesignalAppIds: (config.onesignalAppIds || []).map((k) => ({ ...k, key: "" })),
+      onesignalRestKeys: (config.onesignalRestKeys || []).map((k) => ({ ...k, key: "" })),
+      googleRefreshTokens: (config.googleRefreshTokens || []).map((k) => ({ ...k, key: "" })),
+      githubTokens: (config.githubTokens || []).map((k) => ({ ...k, key: "" }))
+    };
+    fs.writeFileSync(LOCAL_CONFIG_FILE, JSON.stringify(sanitizedForDisk, null, 2), "utf-8");
   } catch (fsErr) {
     console.warn("[System Config] Local disk save notice:", fsErr);
   }

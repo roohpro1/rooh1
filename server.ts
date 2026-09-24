@@ -204,13 +204,6 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
     await ensureGeminiKeysInFirestore();
-    try {
-      const initEnvConfig = await getSystemEnvConfigFromFs();
-      await saveSystemEnvConfigToFs(initEnvConfig);
-      console.log("[System Config] System environment variables and API keys initialized successfully!");
-    } catch (envErr) {
-      console.warn("[System Config] Failed initializing environment config from Firestore on boot:", envErr);
-    }
     setupDailyAppsCron();
     syncAllPublishedAppsToArchive().catch(err => console.warn("[Boot Sync Notice]", err));
   });

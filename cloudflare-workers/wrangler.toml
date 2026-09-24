@@ -30,6 +30,6 @@ bucket_name = "roohme"
 
 # Environment Variables
 [vars]
-FIREBASE_PROJECT_ID = "ai-studio-remixremixremixr-f90e7953-c5a1-4541-b13d-95e6eb5f6d0b"
+FIREBASE_PROJECT_ID = ""
 SITE_BASE_URL = "https://roohpro.com"
 
